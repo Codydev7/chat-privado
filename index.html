@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FΛITHFUL FØREVER</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    height:100vh;
+    display:flex;
+    flex-direction:column
+}
+
+header{
+    height:60px;
+    background:#080808;
+    border-bottom:1px solid #242424;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:bold
+}
+
+#nameScreen{
+    position:fixed;
+    inset:60px 0 0 0;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:500;
+    padding:25px
+}
+
+.name-box{
+    width:100%;
+    max-width:360px;
+    text-align:center
+}
+
+.name-title{
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:25px
+}
+
+.name-input{
+    width:100%;
+    height:48px;
+    padding:0 16px;
+    border-radius:24px;
+    border:1px solid #333;
+    background:#171717;
+    color:#fff;
+    outline:none;
+    font-size:16px;
+    text-align:center
+}
+
+.name-input:focus{
+    border-color:#66752b
+}
+
+.name-button{
+    width:100%;
+    height:48px;
+    margin-top:12px;
+    border:0;
+    border-radius:24px;
+    background:#66752b;
+    color:#fff;
+    font-size:16px;
+    font-weight:bold
+}
+
+#messages{
+    flex:1;
+    overflow-y:auto;
+    padding:15px 12px 90px
+}
+
+.message-row{
+    display:flex;
+    margin-bottom:8px
+}
+
+.message-row.mine{
+    justify-content:flex-end
+}
+
+.message-row.other{
+    justify-content:flex-start
+}
+
+.message{
+    max-width:82%;
+    padding:9px 11px 7px;
+    border-radius:14px;
+    position:relative;
+    word-wrap:break-word
+}
+
+.mine .message{
+    background:#66752b;
+    border-bottom-right-radius:4px
+}
+
+.other .message{
+    background:#202020;
+    border-bottom-left-radius:4px
+}
+
+.sender{
+    font-size:12px;
+    color:#b7c77a;
+    margin-bottom:4px;
+    font-weight:bold
+}
+
+.message-text{
+    font-size:16px;
+    line-height:1.35;
+    white-space:pre-wrap
+}
+
+.message-info{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:4px;
+    margin-top:4px;
+    font-size:11px;
+    color:#aaa
+}
+
+.mine .message-info{
+    color:#d4d9bc
+}
+
+.status{
+    font-size:11px
+}
+
+.status.read{
+    color:red
+}
+
+.photo{
+    display:block;
+    max-width:100%;
+    height:auto;
+    border-radius:10px;
+    margin-top:4px
+}
+
+.audio-player{
+    width:230px;
+    max-width:100%
+}
+
+.media-actions{
+    display:flex;
+    gap:6px;
+    margin-top:6px
+}
+
+.media-actions button{
+    border:0;
+    border-radius:7px;
+    background:#303030;
+    color:#fff;
+    padding:6px 8px;
+    font-size:11px
+}
+
+.mine .media-actions button{
+    background:#55621f
+}
+
+.empty{
+    text-align:center;
+    color:#666;
+    margin-top:40px
+}
+
+.input-area{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:#080808;
+    border-top:1px solid #242424;
+    padding:8px;
+    display:flex;
+    align-items:flex-end;
+    gap:6px
+}
+
+#text{
+    flex:1;
+    resize:none;
+    overflow-y:auto;
+    max-height:120px;
+    min-height:42px;
+    padding:10px 12px;
+    border-radius:21px;
+    border:1px solid #333;
+    background:#171717;
+    color:#fff;
+    outline:none;
+    font-size:16px;
+    font-family:Arial,sans-serif
+}
+
+#text:focus{
+    border-color:#66752b
+}
+
+.icon-button{
+    width:42px;
+    height:42px;
+    border:0;
+    border-radius:50%;
+    background:#202020;
+    color:#fff;
+    font-size:19px
+}
+
+#send{
+    width:44px;
+    height:44px;
+    border:0;
+    border-radius:50%;
+    background:#66752b;
+    color:#fff;
+    font-size:19px
+}
+
+.recording{
+    background:#7b2929!important
+}
+
+.recording-bar{
+    display:none;
+    position:fixed;
+    bottom:62px;
+    left:0;
+    right:0;
+    background:#151515;
+    padding:9px;
+    text-align:center;
+    color:#ddd
+}
+
+.context-menu{
+    position:fixed;
+    background:#1c1c1c;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:5px;
+    z-index:1000
+}
+
+.context-menu button{
+    display:block;
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#fff;
+    padding:10px 14px;
+    text-align:left;
+    border-radius:6px
+}
+</style>
+</head>
+
+<body>
+
+<header id="header">FΛITHFUL FØREVER</header>
+
+<div id="nameScreen">
+    <div class="name-box">
+
+        <div class="name-title">
+            Enter your name to start chatting
+        </div>
+
+        <input
+            id="nameInput"
+            class="name-input"
+            type="text"
+            placeholder="Enter your name"
+            maxlength="30"
+            autocomplete="name"
+        >
+
+        <button
+            id="continueButton"
+            class="name-button"
+        >
+            Continue
+        </button>
+
+    </div>
+</div>
+
+<div id="messages"></div>
+
+<div class="recording-bar" id="recordingBar">
+🎙️ Recording... <span id="recordingTime">0:00</span>
+</div>
+
+<div class="input-area">
+    <button class="icon-button" id="photoButton">📷</button>
+    <button class="icon-button" id="cameraButton">📸</button>
+
+    <textarea
+        id="text"
+        placeholder="Write a message..."
+        rows="1"
+    ></textarea>
+
+    <button class="icon-button" id="micButton">🎤</button>
+    <button id="send">➤</button>
+
+    <input
+        id="photoInput"
+        type="file"
+        accept="image/*"
+        hidden
+    >
+
+    <input
+        id="cameraInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+    >
+</div>
+
+<script>
+
+let ws;
+
+let myName=localStorage.getItem('chatName');
+
+const nameScreen=
+    document.getElementById('nameScreen');
+
+const nameInput=
+    document.getElementById('nameInput');
+
+const continueButton=
+    document.getElementById('continueButton');
+
+function startChat(){
+
+    const name=nameInput.value.trim();
+
+    if(!name){
+
+        nameInput.focus();
+
+        return;
+    }
+
+    myName=name;
+
+    localStorage.setItem(
+        'chatName',
+        myName
+    );
+
+    nameScreen.style.display='none';
+
+    connect();
+}
+
+if(myName){
+
+    nameScreen.style.display='none';
+
+}else{
+
+    nameScreen.style.display='flex';
+
+    setTimeout(()=>{
+        nameInput.focus();
+    },100);
+}
+
+continueButton.onclick=startChat;
+
+nameInput.addEventListener('keydown',e=>{
+
+    if(e.key==='Enter'){
+
+        e.preventDefault();
+
+        startChat();
+    }
+});
+
+const messagesContainer=
+    document.getElementById('messages');
+
+const input=
+    document.getElementById('text');
+
+const sendButton=
+    document.getElementById('send');
+
+const photoInput=
+    document.getElementById('photoInput');
+
+const cameraInput=
+    document.getElementById('cameraInput');
+
+const micButton=
+    document.getElementById('micButton');
+
+const recordingBar=
+    document.getElementById('recordingBar');
+
+const recordingTime=
+    document.getElementById('recordingTime');
+
+let currentMessages=[];
+
+let mediaRecorder=null;
+
+let audioChunks=[];
+
+let recordingStart=0;
+
+let recordingTimer=null;
+
+function connected(){
+
+    return ws&&
+        ws.readyState===WebSocket.OPEN;
+}
+
+function send(data){
+
+    if(connected()){
+
+        ws.send(JSON.stringify(data));
+    }
+}
+
+function getStatus(message){
+
+    if(message.status==='read')return '✓✓';
+
+    if(message.status==='delivered')return '✓✓';
+
+    return '✓';
+}
+
+function watchForRead(message,row){
+
+    if(
+        message.sender===myName||
+        message.status==='read'
+    )return;
+
+    let markedRead=false;
+
+    function markRead(){
+
+        if(
+            markedRead||
+            message.status==='read'
+        )return;
+
+        if(
+            document.visibilityState!=='visible'
+        )return;
+
+        const rect=
+            row.getBoundingClientRect();
+
+        if(
+            rect.top<0||
+            rect.bottom>window.innerHeight
+        )return;
+
+        markedRead=true;
+
+        send({
+            type:'status',
+            status:'read',
+            id:message.id
+        });
+
+        observer.disconnect();
+    }
+
+    const observer=
+        new IntersectionObserver(
+            entries=>{
+
+                for(const entry of entries){
+
+                    if(
+                        entry.isIntersecting&&
+                        entry.intersectionRatio>=0.6
+                    ){
+
+                        markRead();
+
+                        break;
+                    }
+                }
+
+            },
+            {threshold:0.6}
+        );
+
+    observer.observe(row);
+
+    document.addEventListener(
+        'visibilitychange',
+        ()=>{
+
+            if(
+                document.visibilityState==='visible'&&
+                row.isConnected
+            ){
+
+                markRead();
+            }
+
+        }
+    );
+}
+
+function showMessage(message){
+
+    if(
+        document.querySelector(
+            `[data-id="${message.id}"]`
+        )
+    )return;
+
+    const row=
+        document.createElement('div');
+
+    row.className=
+        'message-row '+
+        (
+            message.sender===myName
+            ?'mine'
+            :'other'
+        );
+
+    row.dataset.id=message.id;
+
+    const bubble=
+        document.createElement('div');
+
+    bubble.className='message';
+
+    const sender=
+        document.createElement('div');
+
+    sender.className='sender';
+
+    sender.textContent=
+        message.sender||'Usuario';
+
+    bubble.appendChild(sender);
+
+    if(message.type==='photo'){
+
+        const img=
+            document.createElement('img');
+
+        img.className='photo';
+
+        img.src=message.file;
+
+        bubble.appendChild(img);
+
+        addMediaButtons(
+            bubble,
+            message,
+            'photo'
+        );
+
+    }else if(message.type==='audio'){
+
+        const audio=
+            document.createElement('audio');
+
+        audio.className='audio-player';
+
+        audio.controls=true;
+
+        audio.src=message.file;
+
+        bubble.appendChild(audio);
+
+        addMediaButtons(
+            bubble,
+            message,
+            'audio'
+        );
+
+    }else{
+
+        const text=
+            document.createElement('div');
+
+        text.className='message-text';
+
+        text.textContent=
+            message.text||'';
+
+        bubble.appendChild(text);
+    }
+
+    const info=
+        document.createElement('div');
+
+    info.className='message-info';
+
+    const time=
+        document.createElement('span');
+
+    time.textContent=
+        message.time||'';
+
+    info.appendChild(time);
+
+    if(message.sender===myName){
+
+        const status=
+            document.createElement('span');
+
+        status.className='status';
+
+        status.textContent=
+            getStatus(message);
+
+        if(message.status==='read'){
+
+            status.classList.add('read');
+        }
+
+        info.appendChild(status);
+    }
+
+    bubble.appendChild(info);
+
+    row.appendChild(bubble);
+
+    messagesContainer.appendChild(row);
+
+    row.addEventListener(
+        'contextmenu',
+        e=>{
+
+            e.preventDefault();
+
+            if(message.sender===myName){
+
+                showDeleteMenu(
+                    e.clientX,
+                    e.clientY,
+                    message.id
+                );
+            }
+        }
+    );
+
+    messagesContainer.scrollTop=
+        messagesContainer.scrollHeight;
+
+    if(
+        message.sender!==myName&&
+        message.status!=='read'
+    ){
+
+        send({
+            type:'status',
+            status:'delivered',
+            id:message.id
+        });
+
+        watchForRead(
+            message,
+            row
+        );
+    }
+}
+
+function addMediaButtons(
+    bubble,
+    message,
+    type
+){
+
+    const actions=
+        document.createElement('div');
+
+    actions.className=
+        'media-actions';
+
+    const download=
+        document.createElement('button');
+
+    download.textContent=
+        type==='photo'
+        ?'Download photo'
+        :'Download audio';
+
+    download.onclick=()=>{
+
+        const a=
+            document.createElement('a');
+
+        a.href=message.file;
+
+        a.download=
+            type==='photo'
+            ?'photo'
+            :'audio';
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+    };
+
+    actions.appendChild(download);
+
+    bubble.appendChild(actions);
+}
+
+function renderHistory(messages){
+
+    currentMessages=
+        messages||[];
+
+    messagesContainer.innerHTML='';
+
+    if(!currentMessages.length){
+
+        messagesContainer.innerHTML=
+            '<div class="empty">No messages yet</div>';
+
+        return;
+    }
+
+    currentMessages.forEach(
+        showMessage
+    );
+}
+
+function updateStatus(data){
+
+    const message=
+        currentMessages.find(
+            m=>m.id===data.id
+        );
+
+    if(!message)return;
+
+    message.status=
+        data.status;
+
+    if(data.readTime){
+
+        message.readTime=
+            data.readTime;
+    }
+
+    const row=
+        document.querySelector(
+            `[data-id="${data.id}"]`
+        );
+
+    if(!row)return;
+
+    const status=
+        row.querySelector('.status');
+
+    if(status){
+
+        status.textContent=
+            getStatus(message);
+
+        status.classList.toggle(
+            'read',
+            message.status==='read'
+        );
+    }
+}
+
+function deleteMessage(id){
+
+    currentMessages=
+        currentMessages.filter(
+            m=>m.id!==id
+        );
+
+    const row=
+        document.querySelector(
+            `[data-id="${id}"]`
+        );
+
+    if(row)row.remove();
+}
+
+function showDeleteMenu(x,y,id){
+
+    const old=
+        document.querySelector(
+            '.context-menu'
+        );
+
+    if(old)old.remove();
+
+    const menu=
+        document.createElement('div');
+
+    menu.className=
+        'context-menu';
+
+    menu.style.left=
+        Math.min(
+            x,
+            window.innerWidth-190
+        )+'px';
+
+    menu.style.top=
+        Math.min(
+            y,
+            window.innerHeight-60
+        )+'px';
+
+    const button=
+        document.createElement('button');
+
+    button.textContent=
+        'Delete for everyone';
+
+    button.onclick=()=>{
+
+        if(
+            confirm(
+                'Delete this message for everyone?'
+            )
+        ){
+
+            send({
+                type:'delete',
+                id
+            });
+        }
+
+        menu.remove();
+    };
+
+    menu.appendChild(button);
+
+    document.body.appendChild(menu);
+
+    setTimeout(()=>{
+
+        document.addEventListener(
+            'click',
+            function close(){
+
+                menu.remove();
+
+                document.removeEventListener(
+                    'click',
+                    close
+                );
+            }
+        );
+
+    },0);
+}
+
+function sendText(){
+
+    const text=
+        input.value.trim();
+
+    if(!text)return;
+
+    if(!connected()){
+
+        alert(
+            'Reconectando... espera 2 seg'
+        );
+
+        return;
+    }
+
+    const tempId=
+        'temp-'+Date.now();
+
+    const tempMsg={
+        id:tempId,
+        type:'text',
+        text:text,
+        sender:myName,
+        time:new Date().toLocaleTimeString(
+            'en-GB',
+            {
+                hour:'2-digit',
+                minute:'2-digit',
+                timeZone:'America/Santo_Domingo'
+            }
+        ),
+        status:'sent'
+    };
+
+    const empty=
+        document.querySelector(
+            '.empty'
+        );
+
+    if(empty)empty.remove();
+
+    currentMessages.push(
+        tempMsg
+    );
+
+    showMessage(tempMsg);
+
+    send({
+        type:'message',
+        text,
+        sender:myName
+    });
+
+    input.value='';
+
+    resizeInput();
+
+    input.focus();
+}
+
+function resizeInput(){
+
+    input.style.height='auto';
+
+    input.style.height=
+        Math.min(
+            input.scrollHeight,
+            120
+        )+'px';
+}
+
+input.addEventListener(
+    'input',
+    resizeInput
+);
+
+input.addEventListener(
+    'keydown',
+    e=>{
+
+        if(
+            e.key==='Enter'&&
+            !e.shiftKey
+        ){
+
+            e.preventDefault();
+
+            sendText();
+        }
+    }
+);
+
+sendButton.onclick=
+    sendText;
+
+document.getElementById(
+    'photoButton'
+).onclick=
+    ()=>photoInput.click();
+
+document.getElementById(
+    'cameraButton'
+).onclick=
+    ()=>cameraInput.click();
+
+photoInput.onchange=()=>{
+
+    if(photoInput.files[0]){
+
+        uploadPhoto(
+            photoInput.files[0]
+        );
+    }
+
+    photoInput.value='';
+};
+
+cameraInput.onchange=()=>{
+
+    if(cameraInput.files[0]){
+
+        uploadPhoto(
+            cameraInput.files[0]
+        );
+    }
+
+    cameraInput.value='';
+};
+
+async function uploadPhoto(file){
+
+    if(!connected()){
+
+        alert('Reconectando...');
+
+        return;
+    }
+
+    const tempId=
+        'temp-'+Date.now();
+
+    const tempUrl=
+        URL.createObjectURL(file);
+
+    const tempMsg={
+        id:tempId,
+        type:'photo',
+        file:tempUrl,
+        sender:myName,
+        time:'ahora',
+        status:'sent'
+    };
+
+    const empty=
+        document.querySelector(
+            '.empty'
+        );
+
+    if(empty)empty.remove();
+
+    currentMessages.push(
+        tempMsg
+    );
+
+    showMessage(tempMsg);
+
+    const form=
+        new FormData();
+
+    form.append(
+        'file',
+        file
+    );
+
+    try{
+
+        const response=
+            await fetch(
+                '/upload',
+                {
+                    method:'POST',
+                    body:form
+                }
+            );
+
+        const result=
+            await response.json();
+
+        if(!result.success){
+
+            alert(
+                'Error subiendo foto'
+            );
+
+            deleteMessage(tempId);
+
+            return;
+        }
+
+        deleteMessage(tempId);
+
+        currentMessages=
+            currentMessages.filter(
+                m=>m.id!==tempId
+            );
+
+        send({
+            type:'media',
+            mediaType:'photo',
+            file:result.file,
+            sender:myName
+        });
+
+    }catch(error){
+
+        alert(
+            'Photo upload failed'
+        );
+
+        deleteMessage(tempId);
+    }
+}
+
+micButton.addEventListener(
+    'click',
+    async()=>{
+
+        if(
+            mediaRecorder&&
+            mediaRecorder.state==='recording'
+        ){
+
+            stopRecording();
+
+        }else{
+
+            await startRecording();
+        }
+    }
+);
+
+async function startRecording(){
+
+    if(
+        !navigator.mediaDevices||
+        !navigator.mediaDevices.getUserMedia
+    ){
+
+        alert(
+            'Audio no soportado'
+        );
+
+        return;
+    }
+
+    try{
+
+        const stream=
+            await navigator.mediaDevices.getUserMedia({
+                audio:true
+            });
+
+        mediaRecorder=
+            new MediaRecorder(stream);
+
+        audioChunks=[];
+
+        mediaRecorder.ondataavailable=
+            e=>{
+
+                if(e.data.size>0){
+
+                    audioChunks.push(
+                        e.data
+                    );
+                }
+            };
+
+        mediaRecorder.onstop=
+            async()=>{
+
+                stream.getTracks()
+                    .forEach(
+                        track=>
+                            track.stop()
+                    );
+
+                const blob=
+                    new Blob(
+                        audioChunks,
+                        {
+                            type:
+                                mediaRecorder.mimeType
+                        }
+                    );
+
+                await uploadAudio(
+                    blob
+                );
+            };
+
+        mediaRecorder.start();
+
+        recordingStart=
+            Date.now();
+
+        micButton.classList.add(
+            'recording'
+        );
+
+        recordingBar.style.display=
+            'block';
+
+        recordingTimer=
+            setInterval(()=>{
+
+                const seconds=
+                    Math.floor(
+                        (
+                            Date.now()-
+                            recordingStart
+                        )/1000
+                    );
+
+                recordingTime.textContent=
+                              String(
+                        Math.floor(seconds/60)
+                    ).padStart(2,'0')+
+                    ':'+
+                    String(
+                        seconds%60
+                    ).padStart(2,'0');
+
+            },1000);
+
+    }catch(error){
+
+        alert(
+            'Microphone permission denied'
+        );
+    }
+}
+
+function stopRecording(){
+
+    if(
+        !mediaRecorder||
+        mediaRecorder.state!=='recording'
+    )return;
+
+    mediaRecorder.stop();
+
+    micButton.classList.remove(
+        'recording'
+    );
+
+    recordingBar.style.display='none';
+
+    clearInterval(
+        recordingTimer
+    );
+
+    recordingTimer=null;
+
+    recordingTime.textContent='0:00';
+}
+
+async function uploadAudio(blob){
+
+    if(!connected()){
+
+        alert('Reconectando...');
+
+        return;
+    }
+
+    const form=new FormData();
+
+    let mime=blob.type||'audio/webm';
+    let extension='.webm';
+
+    if(mime.includes('mp4')||mime.includes('m4a')){
+        extension='.m4a';
+    }else if(mime.includes('ogg')){
+        extension='.ogg';
+    }else if(mime.includes('wav')){
+        extension='.wav';
+    }
+
+    form.append(
+        'file',
+        blob,
+        'audio'+extension
+    );
+
+    try{
+
+        const response=await fetch(
+            '/upload',
+            {
+                method:'POST',
+                body:form
+            }
+        );
+
+        const result=await response.json();
+
+        if(!result.success){
+
+            alert('Error subiendo audio');
+
+            return;
+        }
+
+        send({
+            type:'media',
+            mediaType:'audio',
+            file:result.file,
+            sender:myName
+        });
+
+    }catch(error){
+
+        alert('Audio upload failed');
+    }
+}
+
+function connect(){
+
+    if(!myName)return;
+
+    if(
+        ws&&
+        (
+            ws.readyState===WebSocket.OPEN||
+            ws.readyState===WebSocket.CONNECTING
+        )
+    )return;
+
+    const protocol=
+        location.protocol==='https:'
+        ?'wss://'
+        :'ws://';
+
+    ws=new WebSocket(
+        protocol+
+        location.host
+    );
+
+    ws.onopen=()=>{
+
+        console.log(
+            'WebSocket connected'
+        );
+    };
+
+    ws.onmessage=event=>{
+
+        try{
+
+            const data=
+                JSON.parse(
+                    event.data
+                );
+
+            if(data.type==='history'){
+
+                renderHistory(
+                    data.messages
+                );
+
+                return;
+            }
+
+            if(data.type==='message'){
+
+                const message=
+                    data.message;
+
+                if(!message)return;
+
+                const temp=
+                    currentMessages.find(
+                        m=>
+                            m.type===message.type&&
+                            m.sender===myName&&
+                            m.status==='sent'&&
+                            (
+                                message.type==='text'
+                                ?m.text===message.text
+                                :message.type==='photo'
+                                 ?m.file&&message.file
+                                 :true
+                            )
+                    );
+
+                if(temp){
+
+                    deleteMessage(
+                        temp.id
+                    );
+                }
+
+                currentMessages.push(
+                    message
+                );
+
+                const empty=
+                    document.querySelector(
+                        '.empty'
+                    );
+
+                if(empty)empty.remove();
+
+                showMessage(
+                    message
+                );
+
+                return;
+            }
+
+            if(data.type==='status'){
+
+                updateStatus(
+                    data
+                );
+
+                return;
+            }
+
+            if(data.type==='delete'){
+
+                deleteMessage(
+                    data.id
+                );
+
+                return;
+            }
+
+        }catch(error){
+
+            console.error(
+                'WebSocket message error:',
+                error
+            );
+        }
+    };
+
+    ws.onclose=()=>{
+
+        console.log(
+            'WebSocket disconnected'
+        );
+
+        setTimeout(
+            connect,
+            2000
+        );
+    };
+
+    ws.onerror=error=>{
+
+        console.error(
+            'WebSocket error:',
+            error
+        );
+    };
+}
+
+if(myName){
+
+    connect();
+}
+
+</script>
+
+</body>
+</html>
