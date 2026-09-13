@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 
 let messages = [];
+let clients = [];
 
 if (fs.existsSync('./messages.json')) {
     try {
@@ -9,6 +10,25 @@ if (fs.existsSync('./messages.json')) {
     } catch (error) {
         messages = [];
     }
+}
+
+function getTime() {
+    const now = new Date();
+
+    return now.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/Santo_Domingo'
+    });
+}
+
+function sendToClients(message) {
+    const data = `data: ${JSON.stringify(message)}\n\n`;
+
+    clients.forEach(client => {
+        client.write(data);
+    });
 }
 
 const server = http.createServer((req, res) => {
@@ -32,13 +52,33 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Obtener mensajes
+    // Obtener mensajes anteriores
     if (req.method === 'GET' && req.url === '/messages') {
         res.writeHead(200, {
             'Content-Type': 'application/json'
         });
 
         res.end(JSON.stringify(messages));
+        return;
+    }
+
+    // Conexión en tiempo real
+    if (req.method === 'GET' && req.url === '/events') {
+
+        res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive'
+        });
+
+        res.write('\n');
+
+        clients.push(res);
+
+        req.on('close', () => {
+            clients = clients.filter(client => client !== res);
+        });
+
         return;
     }
 
@@ -66,14 +106,19 @@ const server = http.createServer((req, res) => {
 
                 const message = {
                     text: data.text,
-                    time: new Date().toISOString()
+                    time: getTime()
                 };
 
                 messages.push(message);
 
-                fs.writeFileSync('./messages.json', JSON.stringify(messages, null, 2));
-                res.writeHead(200, {
+                fs.writeFileSync(
+                    './messages.json',
+                    JSON.stringify(messages, null, 2)
+                );
 
+                sendToClients(message);
+
+                res.writeHead(200, {
                     'Content-Type': 'application/json'
                 });
 
