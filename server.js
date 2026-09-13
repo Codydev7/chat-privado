@@ -1,14 +1,7 @@
 const http = require('http');
+const WebSocket = require('ws');
 
-console.log('INICIO');
-
-try {
-    const WebSocket = require('ws');
-    console.log('WS INSTALADO');
-} catch (error) {
-    console.error('ERROR CARGANDO WS');
-    console.error(error);
-}
+console.log('INICIO WS');
 
 const PORT = process.env.PORT || 8080;
 
@@ -16,6 +9,18 @@ const server = http.createServer((req, res) => {
     res.end('TEST');
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log('PUERTO ABIERTO:', PORT);
+const wss = new WebSocket.WebSocketServer({
+    port: 0
 });
+
+wss.on('connection', ws => {
+    console.log('CLIENTE WS CONECTADO');
+
+    ws.send('Hola');
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('PUERTO HTTP ABIERTO:', PORT);
+});
+
+console.log('WS CREADO');
