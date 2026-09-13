@@ -2,8 +2,22 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const Busboy = require('busboy');
-const WebSocket = require('ws');
+let Busboy;
+let WebSocket;
+
+try {
+    Busboy = require('busboy');
+    console.log('BUSBOY CARGADO');
+} catch (error) {
+    console.error('ERROR BUSBOY:', error);
+}
+
+try {
+    WebSocket = require('ws');
+    console.log('WEBSOCKET CARGADO');
+} catch (error) {
+    console.error('ERROR WEBSOCKET:', error);
+}
 
 console.log('SERVER.JS INICIANDO');
 console.log('BUSBOY OK');
