@@ -6,5 +6,9 @@
   },
   "engines": {
     "node": "22.x"
+  },
+  "dependencies": {
+    "ws": "^8.18.3",
+    "busboy": "^1.6.0"
   }
 }
