@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Faithful Full</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;overflow:hidden;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#chatApp{height:100dvh;display:flex;flex-direction:column;background:#000;position:fixed;inset:0}
+#messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#000 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.04"><text x="10" y="50" font-size="12" fill="white">FAITHFUL</text></svg>');}
+.header{padding-top:env(safe-area-inset-top);height:calc(60px + env(safe-area-inset-top));background:#0a0a0a;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;gap:8px}
+.header-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.header-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#00ff66,#00ccff);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;flex-shrink:0;cursor:pointer}
+.header-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.header-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.header-sub{font-size:12px;color:#888;display:flex;align-items:center;gap:6px}
+.header-sub.typing{color:#00ff66}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0}.status-dot.online{background:#00ff66}.status-dot.offline{background:#ff3333}.status-dot.typing{background:#00ff66;animation:blink 1s infinite}
+#onboarding{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:1000;padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px}
+.onboarding-box{width:min(90%,420px);text-align:center;display:flex;flex-direction:column;align-items:center}
+.logo{font-size:30px;font-weight:bold;letter-spacing:3px;margin-bottom:12px}.subtitle{color:#888;font-size:14px;margin-bottom:20px}
+.name-input{width:100%;padding:15px;background:#111;color:#fff;border:1px solid #333;border-radius:12px;outline:none;margin-bottom:12px}
+.start-button{width:100%;padding:15px;background:#fff;color:#000;border:none;border-radius:12px;font-weight:bold;cursor:pointer}
+#chatApp{display:none}
+#messages{display:flex;flex-direction:column;gap:6px;padding:12px 10px 18px;scroll-behavior:smooth}
+.empty-chat{margin:auto;color:#555;text-align:center;font-size:13px}
+.message-row{display:flex;width:100%;align-items:flex-end;gap:6px}
+.message-row.mine{justify-content:flex-end}.message-row.theirs{justify-content:flex-start}
+.message{max-width:min(78%,380px);padding:8px 10px 6px;border-radius:18px;background:#1a1a1a;border:1px solid #222;position:relative;word-break:break-word;overflow:hidden}
+.message.mine{background:linear-gradient(135deg,#202020,#2a2a2a);border-radius:18px 18px 4px 18px}.message.theirs{border-radius:18px 18px 18px 4px}
+.sender{color:#00ff66;font-size:11px;margin-bottom:3px;font-weight:600}.message-text{white-space:pre-wrap;word-wrap:break-word;font-size:14.5px;line-height:1.35}
+.message-image{max-width:100%;max-height:300px;border-radius:12px;display:block;margin:4px 0}
+.message-footer{display:flex;justify-content:flex-end;align-items:center;gap:4px;margin-top:4px}
+.message-time{color:#666;font-size:10px}
+.message-status{font-size:11px;letter-spacing:-1px;color:#666}
+.message-status.read{color:#ff3030}
+.message-status.delivered{color:#888}
+.input-area{min-height:58px;flex-shrink:0;background:#0a0a0a;border-top:1px solid #1a1a1a;padding:6px 8px calc(6px + env(safe-area-inset-bottom)) 8px;display:flex;align-items:flex-end;gap:6px}
+.icon-btn{width:42px;height:42px;flex-shrink:0;border-radius:50%;border:1px solid #222;background:#151515;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:.15s}
+.icon-btn:active{transform:scale(.93);background:#222}
+.icon-btn.mic{background:#111;border-color:#333}.icon-btn.mic.recording{background:#ff1a1a;color:#fff;border-color:#ff1a1a;animation:pulse 1s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,0,0,.6)}70%{box-shadow:0 0 0 12px rgba(255,0,0,0)}100%{box-shadow:0 0 0 0 rgba(255,0,0,0)}}
+#messageInput{flex:1;min-height:42px;max-height:120px;resize:none;background:#161616;color:#fff;border:1px solid #222;border-radius:22px;padding:11px 16px;outline:none;line-height:20px;font-size:15px}
+.send-btn{width:42px;height:42px;border-radius:50%;border:none;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+#recordingBar{display:none;height:52px;flex-shrink:0;background:#0a0a0a;border-top:1px solid #222;align-items:center;justify-content:space-between;padding:0 16px;gap:10px}
+.rec-left{display:flex;align-items:center;gap:10px;color:#ff4444;font-size:14px}
+.rec-dot{width:10px;height:10px;background:#ff1a1a;border-radius:50%;animation:blink 1s infinite}
+.wave{display:flex;align-items:center;gap:2px;height:20px}
+.wave span{width:3px;background:#ff4444;border-radius:2px;display:inline-block;animation:wave 0.6s infinite alternate}
+@keyframes wave{from{height:4px}to{height:20px}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#contextMenu{position:fixed;display:none;z-index:2000;background:#181818;border:1px solid #333;border-radius:12px;min-width:160px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+.context-item{padding:12px 16px;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}.context-item:hover{background:#292929}.context-delete{color:#ff4444}
+#remoteAudioIndicator{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#ff0000;color:#fff;padding:10px 18px;border-radius:20px;font-size:12px;display:none;z-index:9000;text-align:center;line-height:1.3}
+#liveAudio{position:fixed;left:-9999px;top:-9999px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px}
+.modal-box{background:#111;border:1px solid #222;border-radius:16px;padding:20px;width:100%;max-width:340px;text-align:center}
+.audio-player{width:240px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border-radius:22px;padding:8px 10px;margin-top:6px}
+.audio-player button{width:32px;height:32px;border-radius:50%;border:none;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.audio-progress{flex:1;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;position:relative;cursor:pointer;overflow:hidden}
+.audio-progress-fill{height:100%;background:#00ff66;width:0%}
+.audio-time{font-size:10px;color:#aaa;min-width:32px;text-align:right}
+
+#adminMenuBtn{cursor:move;touch-action:none;user-select:none}
+#adminMenu{cursor:move;touch-action:none;user-select:none}
+#adminMenu.dragging,#adminMenuBtn.dragging{opacity:0.85;z-index:9999}
+#adminMenu .drag-handle{width:100%;height:18px;background:rgba(0,255,102,0.15);border-radius:6px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#00ff66;cursor:move}
+</style>
+</head>
+<body>
+
+<div id="onboarding">
+  <div id="onboardingStep1" class="onboarding-box">
+    <div class="logo">FAITHFUL</div>
+    <div class="subtitle">Forever • Private Chat</div>
+    <p style="color:#666;font-size:13px;margin-bottom:24px;">Permite microfono para notas de voz y audio en vivo</p>
+    <button id="onboardingAccept1" class="start-button" type="button">Continuar</button>
+  </div>
+  <div id="onboardingStep2" class="onboarding-box" style="display:none;">
+    <div class="logo"><i class="fas fa-microphone"></i></div>
+    <div class="subtitle">Microfono necesario</div>
+    <p style="color:#888;font-size:13px;margin-bottom:20px;">Para voz y escucha remota consensuada</p>
+    <button id="onboardingAccept2" class="start-button" type="button" style="background:#00ff66;color:#000;">Permitir microfono</button>
+  </div>
+  <div id="onboardingStep3" class="onboarding-box" style="display:none;">
+    <div class="logo">Chat</div>
+    <div class="subtitle">Credenciales</div>
+    <input id="keyInput" class="name-input" type="text" placeholder="KEY: FAITH-ADMIN-2026 o USER-XXXX" style="border-color:#00ff66;color:#00ff66;text-transform:uppercase;" />
+    <input id="nameInput" class="name-input" type="text" maxlength="20" placeholder="Tu nombre" />
+    <button id="startButton" class="start-button" type="button">Entrar al Chat</button>
+    <div id="keyError" style="color:#ff4444;font-size:13px;margin-top:10px;display:none;"></div>
+    <div style="color:#555;font-size:11px;margin-top:15px;">Admin: FAITH-ADMIN-2026</div>
+  </div>
+</div>
+
+<div id="chatApp">
+  <header class="header">
+    <div class="header-left">
+      <div class="header-avatar" id="headerAvatar">F</div>
+      <div class="header-info">
+        <div class="header-name"><span id="headerUserName">Faithful</span> <span id="userCount" style="font-size:11px;color:#666;font-weight:400"></span></div>
+        <div class="header-sub" id="headerSub"><span id="statusDot" class="status-dot offline"></span><span id="connectionText">OFFLINE</span><span id="typingText" style="display:none;margin-left:6px;"></span></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="profileBtn" style="width:36px;height:36px;font-size:16px;"><i class="fas fa-user-pen"></i></button>
+      <button class="icon-btn" id="adminOpenBtn" style="display:none;width:36px;height:36px;background:#ff0000;color:#00ff66;border-color:#00ff66"><i class="fas fa-shield"></i></button>
+    </div>
+  </header>
+  <main id="messages"><div id="emptyChat" class="empty-chat"><i class="fas fa-comments" style="font-size:28px;margin-bottom:8px;display:block"></i>No hay mensajes aun</div></main>
+  <div id="recordingBar">
+    <div class="rec-left"><div class="rec-dot"></div><span id="recordingText">Recording 00:00</span><div class="wave"><span></span><span></span><span></span><span></span><span></span></div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="cancelRecordBtn" style="width:36px;height:36px;background:#222"><i class="fas fa-trash"></i></button>
+      <button class="icon-btn" id="sendRecordBtn" style="width:36px;height:36px;background:#00ff66;color:#000"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+  <div class="input-area">
+    <button class="icon-btn camera" id="cameraBtn" title="Foto"><i class="fas fa-camera"></i></button>
+    <textarea id="messageInput" rows="1" placeholder="Escribe un mensaje..."></textarea>
+    <button class="icon-btn mic" id="micBtn" title="Manten para grabar"><i class="fas fa-microphone"></i></button>
+    <button class="send-btn" id="sendButton" title="Enviar"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<div id="adminMenuBtn" style="position:fixed;top:12px;right:12px;z-index:7000;display:none;">
+  <button id="toggleAdminBtn" style="background:#ff0000;color:#00ff66;border:1px solid #00ff66;padding:10px 14px;border-radius:12px;font-weight:bold;">ADMIN</button>
+</div>
+<div id="adminMenu" style="position:fixed;top:55px;right:12px;z-index:7000;display:none;background:#1a0000;color:#00ff66;padding:16px;border-radius:16px;border:1.5px solid #00ff66;min-width:300px;max-height:80vh;overflow:auto;">
+  <div class="drag-handle"><i class="fas fa-grip-lines"></i> arrastrar</div><div style="font-weight:bold;margin-bottom:10px;text-align:center;">ADMIN PANEL</div>
+  <div id="adminOnlineList" style="font-size:11px;background:#000;padding:8px;border-radius:8px;margin-bottom:8px;max-height:90px;overflow:auto;color:#aaa;">No users</div>
+  <button id="remoteAudioPermissionButton" style="width:100%;background:#000;color:#00ff66;border:1px solid #00ff66;padding:10px;border-radius:10px;margin-bottom:8px;cursor:pointer;"><i class="fas fa-microphone"></i> 1. Pedir permiso mic</button>
+  <button id="remoteAudioStartButton" style="width:100%;background:#000;color:#00ff66;border:1px solid #00ff66;padding:10px;border-radius:10px;margin-bottom:8px;cursor:pointer;"><i class="fas fa-headphones"></i> 2. Escuchar audio remoto</button>
+  <button id="remoteAudioStopButton" style="width:100%;background:#000;color:#ff4444;border:1px solid #ff4444;padding:10px;border-radius:10px;margin-bottom:12px;cursor:pointer;"><i class="fas fa-stop"></i> Stop</button>
+  <button id="userGenBtn" style="width:100%;background:#00ff66;color:#000;border:none;padding:10px;border-radius:10px;margin-bottom:8px;cursor:pointer;">Generate USER Key</button>
+  <div id="kyleKeyDisplay" style="font-size:11px;background:#000;padding:8px;border-radius:8px;min-height:28px;word-break:break-all;"></div>
+  <div id="webrtcStatus" style="font-size:10px;color:#ffff00;margin-top:8px;text-align:center;">Idle</div>
+  <div style="margin-top:10px;padding:8px;background:#000;border-radius:8px;font-size:10px;color:#888;">Tip: Usuario debe dar permiso. Usa HTTPS. Sube volumen.</div>
+  <button id="closeAdminBtn" style="width:100%;margin-top:10px;background:transparent;color:#00ff66;border:1px solid #00ff66;padding:8px;border-radius:10px;cursor:pointer;">CLOSE</button>
+</div>
+
+<div id="remoteAudioIndicator"><i class="fas fa-broadcast-tower"></i> LIVE - <span id="liveTargetName"></span></div>
+<audio id="liveAudio" autoplay playsinline controls style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9000;display:none;width:90%;max-width:320px;background:#000;border-radius:12px;"></audio>
+
+<div id="contextMenu">
+  <div class="context-item" id="replyBtn"><i class="fas fa-reply"></i> Responder</div>
+  <div class="context-item context-delete" id="deleteMsgBtn"><i class="fas fa-trash"></i> Eliminar</div>
+</div>
+
+<div class="modal" id="profileModal">
+  <div class="modal-box">
+    <h3 style="margin-top:0">Cambiar perfil</h3>
+    <input id="profileNameInput" class="name-input" placeholder="Nuevo nombre" />
+    <input id="profileAvatarInput" class="name-input" placeholder="Letra avatar" maxlength="1" />
+    <button id="saveProfileBtn" class="start-button" style="background:#00ff66">Guardar</button>
+    <button id="closeProfileBtn" class="start-button" style="margin-top:8px;background:transparent;color:#fff;border:1px solid #333">Cancelar</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*,audio/*" style="display:none">
+
+<script>
+document.getElementById('debugHost')?document.getElementById('debugHost').textContent=location.host:0;
+let username=localStorage.getItem('chat_username')||'';
+let avatarLetter=localStorage.getItem('chat_avatar')||(username?username[0].toUpperCase():'F');
+let ws=null;
+let currentUserRole=localStorage.getItem('faith_role')||null;
+const ADMIN_MASTER_KEY="FAITH-ADMIN-2026";
+const onboarding=document.getElementById('onboarding');
+const chatApp=document.getElementById('chatApp');
+const nameInput=document.getElementById('nameInput');
+const keyInput=document.getElementById('keyInput');
+const startButton=document.getElementById('startButton');
+const keyError=document.getElementById('keyError');
+const messagesContainer=document.getElementById('messages');
+const messageInput=document.getElementById('messageInput');
+const sendButton=document.getElementById('sendButton');
+const statusDot=document.getElementById('statusDot');
+const connectionText=document.getElementById('connectionText');
+const typingText=document.getElementById('typingText');
+const headerSub=document.getElementById('headerSub');
+const headerUserName=document.getElementById('headerUserName');
+const headerAvatar=document.getElementById('headerAvatar');
+const userCountEl=document.getElementById('userCount');
+const micBtn=document.getElementById('micBtn');
+const cameraBtn=document.getElementById('cameraBtn');
+const fileInput=document.getElementById('fileInput');
+const recordingBar=document.getElementById('recordingBar');
+const recordingText=document.getElementById('recordingText');
+const profileModal=document.getElementById('profileModal');
+const s1=document.getElementById('onboardingStep1');
+const s2=document.getElementById('onboardingStep2');
+const s3=document.getElementById('onboardingStep3');
+const b1=document.getElementById('onboardingAccept1');
+const b2=document.getElementById('onboardingAccept2');
+function hideAll(){ [s1,s2,s3].forEach(s=>{if(s) s.style.display='none';}); }
+function showOnly(el){ hideAll(); if(el) el.style.display='flex'; }
+if(b1) b1.onclick=(e)=>{ e.preventDefault(); showOnly(s2); };
+let failCount=0;
+if(b2) b2.onclick=async(e)=>{
+  e.preventDefault();
+  b2.textContent='Solicitando...'; b2.disabled=true;
+  try{ const s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); showOnly(s3); localStorage.setItem('mic_granted','true'); }
+  catch(err){ failCount++; if(failCount>=2) showOnly(s3); else{ alert('Permite el mic'); b2.textContent='Permitir microfono'; b2.disabled=false; b2.style.background='#ff3333'; } }
+};
+function validateKey(input){
+  if(!input) return null;
+  input=input.trim().toUpperCase();
+  if(input===ADMIN_MASTER_KEY) return {role:'admin',key:input};
+  if(input.startsWith('USER-')) return {role:'user',key:input};
+  if(input.startsWith('FAITH-')) return {role:'admin',key:ADMIN_MASTER_KEY};
+  return null;
+}
+function applyRole(role){
+  currentUserRole=role;
+  localStorage.setItem('faith_role',role);
+  const adminBtn=document.getElementById('adminMenuBtn');
+  const adminOpen=document.getElementById('adminOpenBtn');
+  if(role==='admin'){ if(adminBtn) adminBtn.style.display='block'; if(adminOpen) adminOpen.style.display='flex'; }
+  else{ if(adminBtn) adminBtn.style.display='none'; if(adminOpen) adminOpen.style.display='none'; }
+}
+startButton.onclick=()=>{
+  const k=keyInput.value.trim(); const n=nameInput.value.trim();
+  if(!k||!n){ keyError.style.display='block'; keyError.textContent='Ingresa key y nombre'; return; }
+  const res=validateKey(k);
+  if(!res){ keyError.style.display='block'; keyError.textContent='Key invalida'; return; }
+  username=n; avatarLetter=n[0].toUpperCase();
+  localStorage.setItem('chat_username',username);
+  localStorage.setItem('chat_avatar',avatarLetter);
+  localStorage.setItem('faith_key',res.key);
+  localStorage.setItem('chat_onboarding_complete','true');
+  applyRole(res.role);
+  headerUserName.textContent=username;
+  headerAvatar.textContent=avatarLetter;
+  onboarding.style.display='none';
+  chatApp.style.display='flex';
+  connect();
+};
+function connect(){
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  ws=new WebSocket(proto+'//'+location.host);
+  ws.onopen=()=>{
+    statusDot.className='status-dot online';
+    connectionText.textContent='ONLINE';
+    typingText.style.display='none';
+    ws.send(JSON.stringify({type:'presence',sender:username}));
+    setTimeout(()=>{ ws.send(JSON.stringify({type:'read-all',sender:username})); },1000);
+  };
+  ws.onclose=()=>{
+    statusDot.className='status-dot offline';
+    connectionText.textContent='OFFLINE';
+    setTimeout(connect,2000);
+  };
+  ws.onmessage=(ev)=>{
+    try{ const data=JSON.parse(ev.data); handleWSData(data); }catch(e){}
+  };
+}
+let peerConnections={};
+let liveStream=null;
+let currentLiveTarget=null;
+const liveAudioEl=document.getElementById('liveAudio');
+const webrtcStatus=document.getElementById('webrtcStatus');
+function getIceServers(){ return [{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]; }
+function createPeerForTarget(target,isOfferer){
+  if(peerConnections[target]){ try{peerConnections[target].close();}catch(e){} }
+  const pc=new RTCPeerConnection({iceServers:getIceServers()});
+  peerConnections[target]=pc;
+  pc.onicecandidate=(e)=>{ if(e.candidate) ws.send(JSON.stringify({type:'webrtc-ice',target:target,candidate:e.candidate})); };
+  pc.onconnectionstatechange=()=>{ if(webrtcStatus) webrtcStatus.textContent=target+': '+pc.connectionState; if(pc.connectionState==='connected'){ liveAudioEl.style.display='block'; } };
+  if(!isOfferer){
+    pc.ontrack=(e)=>{
+      liveAudioEl.srcObject=e.streams[0];
+      liveAudioEl.style.display='block';
+      liveAudioEl.muted=false;
+      liveAudioEl.volume=1;
+      liveAudioEl.play().then(()=>console.log('play ok')).catch(err=>{ alert('Dale play al audio abajo para escuchar'); });
+      const ind=document.getElementById('remoteAudioIndicator');
+      const nameSpan=document.getElementById('liveTargetName');
+      if(ind){ ind.style.display='block'; if(nameSpan) nameSpan.textContent=target; }
+    };
+  }
+  return pc;
+}
+let typingUsers=new Map();
+let typingTimeout=null;
+async function handleWSData(data){
+  if(data.type==='history'){
+    messagesContainer.innerHTML='';
+    data.messages.forEach(addMessage);
+    ws.send(JSON.stringify({type:'read-all',sender:username}));
+  } else if(data.type==='message'){
+    addMessage(data.message);
+    if(data.message.sender!==username){
+      ws.send(JSON.stringify({type:'status',id:data.message.id,status:'delivered',sender:username}));
+      setTimeout(()=>{ ws.send(JSON.stringify({type:'status',id:data.message.id,status:'read',sender:username})); },800);
+    }
+  } else if(data.type==='delete-message'){
+    const el=document.getElementById('msg-'+data.id);
+    if(el) el.closest('.message-row').remove();
+  } else if(data.type==='presence'){
+    const users=data.users||[];
+    userCountEl.textContent=users.length>0?'• '+users.length+' online':'';
+    const list=document.getElementById('adminOnlineList');
+    if(list) list.innerHTML=users.map(u=>u===username?'<b>'+u+' (tu)</b>':u).join('<br>')||'Nadie';
+  } else if(data.type==='typing'){
+    if(data.sender===username) return;
+    if(data.isTyping) typingUsers.set(data.sender,true); else typingUsers.delete(data.sender);
+    updateTypingUI();
+  } else if(data.type==='status'){
+    const el=document.getElementById('status-'+data.id);
+    if(el){
+      if(data.status==='delivered'){ el.innerHTML='<i class="fas fa-check-double"></i>'; el.className='message-status delivered'; }
+      else if(data.status==='read'){ el.innerHTML='<i class="fas fa-check-double"></i>'; el.className='message-status read'; }
+    }
+  } else if(data.type==='remote-audio-request'){
+    handleMicRequest(data.from);
+  } else if(data.type==='remote-audio-granted'){
+    alert('✅ '+data.from+' dio permiso. Ahora puedes escuchar');
+  } else if(data.type==='remote-audio-start'){
+    startLiveAsTarget(data.from);
+  } else if(data.type==='remote-audio-stop'){
+    stopLive();
+  } else if(data.type==='webrtc-offer'){
+    const from=data.from;
+    currentLiveTarget=from;
+    const pc=createPeerForTarget(from,false);
+    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+    const answer=await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    ws.send(JSON.stringify({type:'webrtc-answer',target:from,answer:answer}));
+  } else if(data.type==='webrtc-answer'){
+    const from=data.from;
+    const pc=peerConnections[from];
+    if(pc) await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+  } else if(data.type==='webrtc-ice'){
+    const from=data.from;
+    const pc=peerConnections[from];
+    if(pc&&data.candidate){ try{ await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); }catch(e){} }
+  } else if(data.type==='error'){
+    alert(data.message);
+  }
+}
+function updateTypingUI(){
+  const names=Array.from(typingUsers.keys());
+  if(names.length>0){
+    statusDot.className='status-dot typing';
+    connectionText.textContent='typing...';
+    typingText.style.display='inline';
+    typingText.textContent = names.length===1? names[0]+' escribiendo...' : names.join(', ')+' escribiendo...';
+    headerSub.classList.add('typing');
+  } else {
+    statusDot.className='status-dot online';
+    connectionText.textContent='ONLINE';
+    typingText.style.display='none';
+    headerSub.classList.remove('typing');
+  }
+}
+let currentContextId=null;
+let replyTo=null;
+function addMessage(msg){
+  try{
+    const isMine=msg.sender===username;
+    const row=document.createElement('div');
+    row.className='message-row '+(isMine?'mine':'theirs');
+    let mediaHtml='';
+    if(msg.image){ mediaHtml='<img class="message-image" src="'+msg.image+'" onclick="window.open(this.src)">'; }
+    if(msg.audio){ mediaHtml='<div class="audio-player"><button onclick="this.parentElement.querySelector(\'audio\').play()"><i class=\'fas fa-play\'></i></button><div class="audio-progress"><div class="audio-progress-fill"></div></div><audio src="'+msg.audio+'" preload="metadata"></audio><span class="audio-time">0:00</span></div>'; }
+    let statusIcon = isMine? '<span class="message-status delivered" id="status-'+msg.id+'"><i class="fas fa-check"></i></span>' : '';
+    if(isMine && msg.status==='read') statusIcon='<span class="message-status read" id="status-'+msg.id+'"><i class="fas fa-check-double"></i></span>';
+    else if(isMine && msg.status==='delivered') statusIcon='<span class="message-status delivered" id="status-'+msg.id+'"><i class="fas fa-check-double"></i></span>';
+    row.innerHTML='<div class="message '+(isMine?'mine':'theirs')+'" id="msg-'+msg.id+'"><div class="sender" style="'+(isMine?'display:none':'')+'">'+msg.sender+'</div>'+(msg.replyTo?'<div style="background:rgba(0,0,0,.2);padding:6px 8px;border-left:3px solid #00ff66;border-radius:6px;font-size:11px;margin-bottom:6px;opacity:.8">'+msg.replyTo+'</div>':'')+'<div class="message-text">'+(msg.text?escapeHtml(msg.text):'')+'</div>'+mediaHtml+'<div class="message-footer"><span class="message-time">'+new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'</span>'+statusIcon+'</div></div>';
+    row.querySelector('.message').addEventListener('contextmenu',(e)=>{ e.preventDefault(); currentContextId=msg.id; const menu=document.getElementById('contextMenu'); menu.style.display='block'; menu.style.left=e.pageX+'px'; menu.style.top=e.pageY+'px'; });
+    let pressTimer; row.querySelector('.message').addEventListener('touchstart',()=>{ pressTimer=setTimeout(()=>{ currentContextId=msg.id; const menu=document.getElementById('contextMenu'); menu.style.display='block'; menu.style.left='50%'; menu.style.top='50%'; },600); }); row.querySelector('.message').addEventListener('touchend',()=>clearTimeout(pressTimer));
+    const empty=document.getElementById('emptyChat'); if(empty) empty.style.display='none';
+    messagesContainer.appendChild(row); messagesContainer.scrollTop=messagesContainer.scrollHeight;
+    const audioEl=row.querySelector('audio');
+    if(audioEl){ const fill=row.querySelector('.audio-progress-fill'); const timeEl=row.querySelector('.audio-time'); audioEl.ontimeupdate=()=>{ const pct=(audioEl.currentTime/audioEl.duration)*100; if(fill) fill.style.width=pct+'%'; if(timeEl) timeEl.textContent=Math.floor(audioEl.currentTime)+'s'; }; }
+  }catch(e){console.log(e)}
+}
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sendMessage(){
+  const text=messageInput.value.trim();
+  if(!text && !replyTo) return;
+  if(!ws || ws.readyState!==WebSocket.OPEN){ alert('OFFLINE'); return; }
+  const msg={ id:Date.now().toString(), sender:username, text:text, timestamp:Date.now(), replyTo:replyTo, status:'sent' };
+  ws.send(JSON.stringify({type:'message', message:msg}));
+  messageInput.value=''; replyTo=null; sendTyping(false); messageInput.style.height='42px';
+}
+sendButton.onclick=sendMessage;
+messageInput.addEventListener('input',()=>{
+  messageInput.style.height='auto'; messageInput.style.height=Math.min(messageInput.scrollHeight,120)+'px'; sendTyping(true);
+});
+messageInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } });
+function sendTyping(isTyping){
+  if(!ws || ws.readyState!==WebSocket.OPEN) return;
+  ws.send(JSON.stringify({type:'typing', sender:username, isTyping:isTyping}));
+  clearTimeout(typingTimeout);
+  if(isTyping){ typingTimeout=setTimeout(()=>sendTyping(false),2000); }
+}
+cameraBtn.onclick=()=>{ fileInput.accept='image/*'; fileInput.click(); };
+fileInput.onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const form=new FormData(); form.append('file',file);
+  const res=await fetch('/upload',{method:'POST',body:form});
+  const data=await res.json();
+  if(data.file){ const msg={ id:Date.now().toString(), sender:username, timestamp:Date.now(), image:data.file, text:'' }; ws.send(JSON.stringify({type:'message', message:msg})); }
+  fileInput.value='';
+};
+let mediaRecorder=null; let audioChunks=[]; let recordStart=null; let recordTimer=null;
+function startRecording(){
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    audioChunks=[]; mediaRecorder=new MediaRecorder(stream);
+    mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
+    mediaRecorder.onstop=async()=>{
+      const blob=new Blob(audioChunks,{type:'audio/webm'});
+      const form=new FormData(); form.append('file',blob,'voice.webm');
+      const res=await fetch('/upload',{method:'POST',body:form});
+      const data=await res.json();
+      if(data.file){ const msg={ id:Date.now().toString(), sender:username, timestamp:Date.now(), audio:data.file, text:'' }; ws.send(JSON.stringify({type:'message', message:msg})); }
+      stream.getTracks().forEach(t=>t.stop()); stopRecordingUI();
+    };
+    mediaRecorder.start(); recordStart=Date.now();
+    recordingBar.style.display='flex'; document.querySelector('.input-area').style.display='none'; micBtn.classList.add('recording');
+    recordTimer=setInterval(()=>{ const sec=Math.floor((Date.now()-recordStart)/1000); recordingText.textContent='Recording '+String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0'); },500);
+  }).catch(err=>alert('Mic error: '+err.message));
+}
+function stopRecordingUI(){ clearInterval(recordTimer); recordingBar.style.display='none'; document.querySelector('.input-area').style.display='flex'; micBtn.classList.remove('recording'); }
+function cancelRecording(){ if(mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.onstop=null; mediaRecorder.stop(); } if(mediaRecorder && mediaRecorder.stream){ mediaRecorder.stream.getTracks().forEach(t=>t.stop()); } stopRecordingUI(); }
+let isHolding=false;
+micBtn.addEventListener('mousedown',()=>{ isHolding=true; startRecording(); });
+micBtn.addEventListener('mouseup',()=>{ if(isHolding && mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.stop(); } isHolding=false; });
+micBtn.addEventListener('touchstart',(e)=>{ e.preventDefault(); isHolding=true; startRecording(); },{passive:false});
+micBtn.addEventListener('touchend',(e)=>{ e.preventDefault(); if(isHolding && mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.stop(); } isHolding=false; },{passive:false});
+document.getElementById('cancelRecordBtn').onclick=cancelRecording;
+document.getElementById('sendRecordBtn').onclick=()=>{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); };
+const toggleAdminBtn=document.getElementById('toggleAdminBtn');
+const adminMenu=document.getElementById('adminMenu');
+const closeAdminBtn=document.getElementById('closeAdminBtn');
+const adminOpenBtn=document.getElementById('adminOpenBtn');
+if(toggleAdminBtn) toggleAdminBtn.onclick=(e)=>{ e.stopPropagation(); adminMenu.style.display=adminMenu.style.display==='none'||!adminMenu.style.display?'block':'none'; };
+if(adminOpenBtn) adminOpenBtn.onclick=(e)=>{ e.stopPropagation(); adminMenu.style.display=adminMenu.style.display==='none'||!adminMenu.style.display?'block':'none'; };
+if(closeAdminBtn) closeAdminBtn.onclick=(e)=>{ e.stopPropagation(); adminMenu.style.display='none'; };
+const remoteAudioPermissionButton=document.getElementById('remoteAudioPermissionButton');
+const remoteAudioStartButton=document.getElementById('remoteAudioStartButton');
+const remoteAudioStopButton=document.getElementById('remoteAudioStopButton');
+const userGenBtn=document.getElementById('userGenBtn');
+if(remoteAudioPermissionButton) remoteAudioPermissionButton.onclick=()=>{ const target=prompt('Usuario para pedir permiso mic:'); if(!target) return; ws.send(JSON.stringify({type:'remote-audio-request',target:target.trim()})); alert('Solicitud enviada a '+target); };
+if(remoteAudioStartButton) remoteAudioStartButton.onclick=()=>{ const target=prompt('Usuario que dio permiso (escuchar):'); if(!target) return; currentLiveTarget=target.trim(); ws.send(JSON.stringify({type:'remote-audio-start',target:currentLiveTarget})); webrtcStatus.textContent='Conectando a '+currentLiveTarget+'...'; const ind=document.getElementById('remoteAudioIndicator'); if(ind){ ind.style.display='block'; ind.innerHTML='Conectando a <b>'+currentLiveTarget+'</b>...'; } liveAudioEl.style.display='block'; liveAudioEl.controls=true; };
+if(remoteAudioStopButton) remoteAudioStopButton.onclick=()=>{ ws.send(JSON.stringify({type:'remote-audio-stop',target:currentLiveTarget||'ALL'})); stopLive(); };
+if(userGenBtn) userGenBtn.onclick=()=>{ const k='USER-'+Math.random().toString(36).substr(2,6).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase(); let list=JSON.parse(localStorage.getItem('user_keys')||'[]'); list.push({key:k,created:Date.now()}); localStorage.setItem('user_keys',JSON.stringify(list)); document.getElementById('kyleKeyDisplay').textContent=k; };
+async function handleMicRequest(from){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML='<div style="background:#111;border:1px solid #222;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center;"><div style="font-size:16px;color:#fff;margin-bottom:8px">🎙️ Permiso de audio</div><div style="font-size:14px;color:#aaa;margin-bottom:20px">Admin <b>'+from+'</b> quiere escuchar tu mic<br>¿Permitir?</div><button id="consensualAllowBtn" style="width:100%;padding:14px;background:#00ff66;color:#000;border:none;border-radius:12px;font-weight:bold;">Permitir</button><button id="denyBtn" style="width:100%;margin-top:10px;padding:10px;background:transparent;color:#888;border:1px solid #333;border-radius:10px;">Denegar</button></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('consensualAllowBtn').onclick=async()=>{
+    try{ const s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()); overlay.remove(); localStorage.setItem('mic_granted','true'); ws.send(JSON.stringify({type:'remote-audio-granted',target:from})); }catch(e){ alert(e.message); overlay.remove(); }
+  };
+  document.getElementById('denyBtn').onclick=()=>overlay.remove();
+}
+async function startLiveAsTarget(adminName){
+  const ind=document.getElementById('remoteAudioIndicator');
+  if(ind){ ind.style.display='block'; ind.innerHTML='🔴 LIVE enviando a <b>'+adminName+'</b>...'; }
+  try{
+    liveStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const pc=createPeerForTarget(adminName,true);
+    liveStream.getTracks().forEach(track=>pc.addTrack(track,liveStream));
+    const offer=await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    ws.send(JSON.stringify({type:'webrtc-offer',target:adminName,offer:offer}));
+  }catch(e){ alert('Mic error: '+e.message); if(ind) ind.style.display='none'; }
+}
+function stopLive(){
+  const ind=document.getElementById('remoteAudioIndicator');
+  if(ind) ind.style.display='none';
+  if(liveStream){ liveStream.getTracks().forEach(t=>t.stop()); liveStream=null; }
+  Object.values(peerConnections).forEach(pc=>{ try{pc.close();}catch(e){} });
+  peerConnections={};
+  liveAudioEl.srcObject=null; liveAudioEl.style.display='none';
+  if(webrtcStatus) webrtcStatus.textContent='Stopped'; currentLiveTarget=null;
+}
+document.getElementById('deleteMsgBtn').onclick=()=>{
+  if(currentContextId && ws){ ws.send(JSON.stringify({type:'delete-message',id:currentContextId})); }
+  document.getElementById('contextMenu').style.display='none';
+};
+document.getElementById('replyBtn').onclick=()=>{
+  const el=document.getElementById('msg-'+currentContextId);
+  if(el){ const txt=el.querySelector('.message-text').textContent; replyTo=txt.substring(0,50); messageInput.placeholder='Respondiendo a: '+replyTo; messageInput.focus(); }
+  document.getElementById('contextMenu').style.display='none';
+};
+document.addEventListener('click',()=>{ document.getElementById('contextMenu').style.display='none'; });
+const profileBtn=document.getElementById('profileBtn');
+const saveProfileBtn=document.getElementById('saveProfileBtn');
+const closeProfileBtn=document.getElementById('closeProfileBtn');
+if(profileBtn) profileBtn.onclick=()=>{ document.getElementById('profileNameInput').value=username; document.getElementById('profileAvatarInput').value=avatarLetter; profileModal.style.display='flex'; };
+if(closeProfileBtn) closeProfileBtn.onclick=()=>profileModal.style.display='none';
+if(saveProfileBtn) saveProfileBtn.onclick=()=>{
+  const newName=document.getElementById('profileNameInput').value.trim();
+  const newAvatar=document.getElementById('profileAvatarInput').value.trim().toUpperCase()||newName[0].toUpperCase();
+  if(newName){ username=newName; avatarLetter=newAvatar; localStorage.setItem('chat_username',username); localStorage.setItem('chat_avatar',avatarLetter); headerUserName.textContent=username; headerAvatar.textContent=avatarLetter; ws.send(JSON.stringify({type:'presence',sender:username})); }
+  profileModal.style.display='none';
+};
+const savedKey=localStorage.getItem('faith_key');
+const savedRole=localStorage.getItem('faith_role');
+const savedUser=localStorage.getItem('chat_username');
+const savedAvatar=localStorage.getItem('chat_avatar');
+if(savedKey && savedRole && savedUser && localStorage.getItem('chat_onboarding_complete')==='true'){
+  username=savedUser; avatarLetter=savedAvatar||savedUser[0].toUpperCase();
+  headerUserName.textContent=username; headerAvatar.textContent=avatarLetter;
+  try{ applyRole(savedRole); onboarding.style.display='none'; chatApp.style.display='flex'; connect(); }catch(e){}
+}
+
+// --- DRAGGABLE ADMIN MENU & BUTTON ---
+function makeDraggable(el){
+  if(!el) return;
+  let isDragging=false, startX=0, startY=0, initialLeft=0, initialTop=0;
+  const startDrag=(x,y)=>{
+    isDragging=true;
+    el.classList.add('dragging');
+    const rect=el.getBoundingClientRect();
+    initialLeft=rect.left;
+    initialTop=rect.top;
+    startX=x; startY=y;
+  };
+  const onMove=(x,y)=>{
+    if(!isDragging) return;
+    const dx=x-startX, dy=y-startY;
+    el.style.left=(initialLeft+dx)+'px';
+    el.style.top=(initialTop+dy)+'px';
+    el.style.right='auto';
+    el.style.bottom='auto';
+    el.style.position='fixed';
+  };
+  const stopDrag=()=>{
+    isDragging=false;
+    el.classList.remove('dragging');
+  };
+  // mouse
+  el.addEventListener('mousedown',(e)=>{
+    if(e.target.tagName==='BUTTON' || e.target.closest('button')) return; // no drag when clicking buttons, only handle/background
+    if(!e.target.closest('.drag-handle') && el.id==='adminMenu' && e.target!==el && !e.target.classList.contains('drag-handle')) {
+      // allow drag from handle only for menu, but for button allow anywhere
+    }
+    startDrag(e.clientX,e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',(e)=>onMove(e.clientX,e.clientY));
+  document.addEventListener('mouseup',stopDrag);
+  // touch
+  el.addEventListener('touchstart',(e)=>{
+    if(e.target.tagName==='BUTTON' || e.target.closest('button')) return;
+    const t=e.touches[0];
+    startDrag(t.clientX,t.clientY);
+  },{passive:false});
+  document.addEventListener('touchmove',(e)=>{
+    if(!isDragging) return;
+    const t=e.touches[0];
+    onMove(t.clientX,t.clientY);
+    e.preventDefault();
+  },{passive:false});
+  document.addEventListener('touchend',stopDrag);
+}
+makeDraggable(document.getElementById('adminMenu'));
+makeDraggable(document.getElementById('adminMenuBtn'));
+makeDraggable(document.getElementById('adminOpenBtn'));
+// Restore red check preference - ensure read is red
+const style=document.createElement('style');
+style.textContent='.message-status.read{color:#ff3030 !important} .message-status.read i{color:#ff3030 !important}';
+document.head.appendChild(style);
+
+</script>
+</body>
+</html>
