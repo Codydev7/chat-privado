@@ -121,6 +121,8 @@ const wss = new WebSocket.Server({server});
 const clients = new Map();
 let messageHistory=[];
 let pinnedStore=[];
+let chatBackground=null; // Shared background admin<->user
+let chatBubbleColors={mine:'#202020', theirs:'#151515'}; // Shared bubble colors
 
 function getClientIp(ws, req){
   try{
@@ -176,7 +178,14 @@ wss.on('connection',(ws, req)=>{
           ip: clientIp || existing?.ip || 'unknown',
           lastSeen: Date.now()
         });
-        ws.send(JSON.stringify({type:'history', messages:messageHistory, pinned:pinnedStore}));
+        ws.send(JSON.stringify({type:'history', messages:messageHistory, pinned:pinnedStore, background:chatBackground, bubbleColors:chatBubbleColors}));
+        // Send current background and bubble colors if exists
+        if(chatBackground){
+          ws.send(JSON.stringify({type:'background-change', background:chatBackground}));
+        }
+        if(chatBubbleColors){
+          ws.send(JSON.stringify({type:'bubble-color-change', colors:chatBubbleColors}));
+        }
         broadcastPresence();
         return;
       }
@@ -284,6 +293,20 @@ wss.on('connection',(ws, req)=>{
           broadcast({type:'admin-revoke-license', target:target, from:currentUser});
         }
         broadcastPresence();
+        return;
+      }
+
+      if(msg.type==='background-change'){
+        chatBackground=msg.background;
+        console.log(`[BG CHANGE] by ${msg.sender}: ${JSON.stringify(chatBackground).substring(0,80)}`);
+        broadcast({type:'background-change', background:chatBackground, sender:msg.sender});
+        return;
+      }
+
+      if(msg.type==='bubble-color-change'){
+        chatBubbleColors=msg.colors;
+        console.log(`[BUBBLE COLOR CHANGE] by ${msg.sender}: ${JSON.stringify(chatBubbleColors)}`);
+        broadcast({type:'bubble-color-change', colors:chatBubbleColors, sender:msg.sender});
         return;
       }
 
