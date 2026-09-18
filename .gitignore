@@ -1,2 +1,37 @@
-uploads/
+# Dependencies - no subir node_modules
 node_modules/
+package-lock.json
+yarn.lock
+
+# Uploads - fotos, audios, archivos del chat (privado y pesa mucho)
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.mp4
+*.mp3
+*.webm
+*.ogg
+
+# Keys - claves privadas generadas (NO SUBIR A GITHUB)
+keys.json
+*.key
+
+# Logs
+logs/
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+
+# Env - variables privadas
+.env
+.env.local
+
+# Temp y datos locales
+tmp/
+temp/
+chat_data/
+krabby/
