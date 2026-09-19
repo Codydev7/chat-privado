@@ -17,10 +17,9 @@ app.get('/health', (req,res)=>res.status(200).send('OK'));
 app.get('/healthz', (req,res)=>res.status(200).send('OK'));
 app.get('/ping', (req,res)=>res.status(200).send('pong'));
 
-app.get('/my-ip', async (req,res)=>{
+app.get('/my-ip', (req,res)=>{
   const ip = (req.headers['x-forwarded-for']?.split(',')[0] || req.headers['x-real-ip'] || req.ip || req.socket.remoteAddress || '').replace('::ffff:','');
-  const geo = await getGeoForIp(ip);
-  res.json({ip, geo});
+  res.json({ip});
 });
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -33,7 +32,7 @@ try{
     licenseKeys = JSON.parse(fs.readFileSync(keysFile,'utf8'));
   } else {
     licenseKeys = [
-      {key:'FAITH-ADMIN-2026', role:'admin', name:'Faith Admin', created:Date.now(), used:0},
+      {key:'ADMIN-KEY-HIDDEN', role:'admin', name:'Faith Admin', created:Date.now(), used:0},
       {key:'ADMIN_MASTER_2024', role:'admin', name:'Master Admin', created:Date.now(), used:0},
       {key:'CHAT-ADMIN-001', role:'admin', name:'Admin', created:Date.now(), used:0}
     ];
@@ -125,28 +124,6 @@ let pinnedStore=[];
 let chatBackground=null; // Shared background admin<->user
 let chatBubbleColors={mine:'#202020', theirs:'#151515'}; // Shared bubble colors
 
-
-const ipGeoCache = new Map();
-
-async function getGeoForIp(ip){
-  if(!ip || ip==='unknown' || ip==='127.0.0.1' || ip==='::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) return null;
-  if(ipGeoCache.has(ip)) return ipGeoCache.get(ip);
-  try{
-    const controller = new AbortController();
-    const timeout = setTimeout(()=>controller.abort(), 4000);
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,lat,lon,isp,query`, {signal: controller.signal});
-    clearTimeout(timeout);
-    const data = await res.json();
-    if(data && data.status==='success'){
-      const geo = {country: data.country||'', countryCode: data.countryCode||'', region: data.regionName||'', city: data.city||'', isp: data.isp||'', lat: data.lat, lon: data.lon};
-      ipGeoCache.set(ip, geo);
-      setTimeout(()=>ipGeoCache.delete(ip), 3600000);
-      return geo;
-    }
-  }catch(e){ console.log('[GEO] fail for '+ip); }
-  return null;
-}
-
 function getClientIp(ws, req){
   try{
     const forwarded = req.headers['x-forwarded-for'];
@@ -168,29 +145,8 @@ function broadcastExcept(data,ex){
   wss.clients.forEach(c=>{ if(c!==ex && c.readyState===1) c.send(str); });
 }
 function broadcastPresence(){
-  const usersPublic = Array.from(clients.values()).map(v=>({name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0]}));
-  const usersAdmin = Array.from(clients.values()).map(v=>({
-    name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0], ip:v.ip||'unknown',
-    geo: v.geo||null, city: v.geo?.city||'', country: v.geo?.country||'', countryCode: v.geo?.countryCode||'', region: v.geo?.region||'', isp: v.geo?.isp||''
-  }));
-  wss.clients.forEach(c=>{
-    if(c.readyState!==1) return;
-    try{
-      let isAdmin = !!c.isAdmin;
-      if(!isAdmin){
-        for(const [name, entry] of clients.entries()){
-          if(entry.ws===c && (entry.role==='admin' || (entry.name&&entry.name.toLowerCase().includes('admin')))){
-            isAdmin = true; break;
-          }
-        }
-      }
-      if(isAdmin){
-        c.send(JSON.stringify({type:'presence', users:usersAdmin}));
-      }else{
-        c.send(JSON.stringify({type:'presence', users:usersPublic}));
-      }
-    }catch(e){}
-  });
+  const users = Array.from(clients.values()).map(v=>({name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0], ip:v.ip||'unknown'}));
+  broadcast({type:'presence', users:users});
 }
 function getWs(target){
   const entry = clients.get(target);
@@ -220,24 +176,8 @@ wss.on('connection',(ws, req)=>{
           photo: msg.photo || existing?.photo || '',
           avatar: msg.avatar || newName[0],
           ip: clientIp || existing?.ip || 'unknown',
-          geo: existing?.geo || null,
-          role: existing?.role || (msg.role || 'user'),
           lastSeen: Date.now()
         });
-        if((existing?.role==='admin') || (msg.role==='admin') || newName.toLowerCase().includes('admin') || newName==='Faith Admin'){
-          try{ ws.isAdmin = true; }catch(e){}
-        }
-        (async()=>{
-          const entry = clients.get(currentUser);
-          if(entry && !entry.geo){
-            const geo = await getGeoForIp(entry.ip);
-            if(geo){
-              entry.geo = geo;
-              console.log(`[GEO] ${currentUser} ${entry.ip} -> ${geo.city}, ${geo.country}`);
-              broadcastPresence();
-            }
-          }
-        })();
         ws.send(JSON.stringify({type:'history', messages:messageHistory, pinned:pinnedStore, background:chatBackground, bubbleColors:chatBubbleColors}));
         // Send current background and bubble colors if exists
         if(chatBackground){
@@ -431,7 +371,7 @@ setInterval(()=>{
 
 server.listen(PORT, HOST, ()=>{
   console.log(`LIVE on ${HOST}:${PORT} with IP tracking + pins + temp + keys`);
-  console.log(`Master KEY: FAITH-ADMIN-2026`);
+  console.log(`Server ready`);
   console.log(`Keys API ready: /api/keys, /api/validate-key, /api/generate-key, /api/revoke-key`);
 });
 server.on('error',(e)=>{ console.error(e); process.exit(1); });
