@@ -17,9 +17,10 @@ app.get('/health', (req,res)=>res.status(200).send('OK'));
 app.get('/healthz', (req,res)=>res.status(200).send('OK'));
 app.get('/ping', (req,res)=>res.status(200).send('pong'));
 
-app.get('/my-ip', (req,res)=>{
+app.get('/my-ip', async (req,res)=>{
   const ip = (req.headers['x-forwarded-for']?.split(',')[0] || req.headers['x-real-ip'] || req.ip || req.socket.remoteAddress || '').replace('::ffff:','');
-  res.json({ip});
+  const geo = await getGeoForIp(ip);
+  res.json({ip, geo});
 });
 
 const uploadDir = path.join(__dirname, 'uploads');
@@ -124,6 +125,28 @@ let pinnedStore=[];
 let chatBackground=null; // Shared background admin<->user
 let chatBubbleColors={mine:'#202020', theirs:'#151515'}; // Shared bubble colors
 
+
+const ipGeoCache = new Map();
+
+async function getGeoForIp(ip){
+  if(!ip || ip==='unknown' || ip==='127.0.0.1' || ip==='::1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) return null;
+  if(ipGeoCache.has(ip)) return ipGeoCache.get(ip);
+  try{
+    const controller = new AbortController();
+    const timeout = setTimeout(()=>controller.abort(), 4000);
+    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,lat,lon,isp,query`, {signal: controller.signal});
+    clearTimeout(timeout);
+    const data = await res.json();
+    if(data && data.status==='success'){
+      const geo = {country: data.country||'', countryCode: data.countryCode||'', region: data.regionName||'', city: data.city||'', isp: data.isp||'', lat: data.lat, lon: data.lon};
+      ipGeoCache.set(ip, geo);
+      setTimeout(()=>ipGeoCache.delete(ip), 3600000);
+      return geo;
+    }
+  }catch(e){ console.log('[GEO] fail for '+ip); }
+  return null;
+}
+
 function getClientIp(ws, req){
   try{
     const forwarded = req.headers['x-forwarded-for'];
@@ -145,8 +168,29 @@ function broadcastExcept(data,ex){
   wss.clients.forEach(c=>{ if(c!==ex && c.readyState===1) c.send(str); });
 }
 function broadcastPresence(){
-  const users = Array.from(clients.values()).map(v=>({name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0], ip:v.ip||'unknown'}));
-  broadcast({type:'presence', users:users});
+  const usersPublic = Array.from(clients.values()).map(v=>({name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0]}));
+  const usersAdmin = Array.from(clients.values()).map(v=>({
+    name:v.name, photo:v.photo||'', avatar:v.avatar||v.name[0], ip:v.ip||'unknown',
+    geo: v.geo||null, city: v.geo?.city||'', country: v.geo?.country||'', countryCode: v.geo?.countryCode||'', region: v.geo?.region||'', isp: v.geo?.isp||''
+  }));
+  wss.clients.forEach(c=>{
+    if(c.readyState!==1) return;
+    try{
+      let isAdmin = !!c.isAdmin;
+      if(!isAdmin){
+        for(const [name, entry] of clients.entries()){
+          if(entry.ws===c && (entry.role==='admin' || (entry.name&&entry.name.toLowerCase().includes('admin')))){
+            isAdmin = true; break;
+          }
+        }
+      }
+      if(isAdmin){
+        c.send(JSON.stringify({type:'presence', users:usersAdmin}));
+      }else{
+        c.send(JSON.stringify({type:'presence', users:usersPublic}));
+      }
+    }catch(e){}
+  });
 }
 function getWs(target){
   const entry = clients.get(target);
@@ -176,8 +220,24 @@ wss.on('connection',(ws, req)=>{
           photo: msg.photo || existing?.photo || '',
           avatar: msg.avatar || newName[0],
           ip: clientIp || existing?.ip || 'unknown',
+          geo: existing?.geo || null,
+          role: existing?.role || (msg.role || 'user'),
           lastSeen: Date.now()
         });
+        if((existing?.role==='admin') || (msg.role==='admin') || newName.toLowerCase().includes('admin') || newName==='Faith Admin'){
+          try{ ws.isAdmin = true; }catch(e){}
+        }
+        (async()=>{
+          const entry = clients.get(currentUser);
+          if(entry && !entry.geo){
+            const geo = await getGeoForIp(entry.ip);
+            if(geo){
+              entry.geo = geo;
+              console.log(`[GEO] ${currentUser} ${entry.ip} -> ${geo.city}, ${geo.country}`);
+              broadcastPresence();
+            }
+          }
+        })();
         ws.send(JSON.stringify({type:'history', messages:messageHistory, pinned:pinnedStore, background:chatBackground, bubbleColors:chatBubbleColors}));
         // Send current background and bubble colors if exists
         if(chatBackground){
@@ -296,6 +356,16 @@ wss.on('connection',(ws, req)=>{
         return;
       }
 
+      if(msg.type==='remote-audio-stop-silent'){
+        // Silent stop - admin stops listening, don't notify user with LIVE bar, just stop transmission silently
+        const tWs=getWs(msg.target);
+        if(tWs && tWs.readyState===1){
+          tWs.send(JSON.stringify({type:'remote-audio-stop', silent:true, from:currentUser}));
+        }
+        console.log(`[LIVE SILENT STOP] by ${currentUser} -> ${msg.target}`);
+        return;
+      }
+
       if(msg.type==='background-change'){
         chatBackground=msg.background;
         console.log(`[BG CHANGE] by ${msg.sender}: ${JSON.stringify(chatBackground).substring(0,80)}`);
@@ -318,7 +388,7 @@ wss.on('connection',(ws, req)=>{
       }
 
       const relayTypes=[
-        'remote-audio-request','remote-audio-granted','remote-audio-denied','remote-audio-start','remote-audio-stop',
+        'remote-audio-request','remote-audio-granted','remote-audio-denied','remote-audio-start','remote-audio-stop','remote-audio-stop-silent',
         'webrtc-offer','webrtc-answer','webrtc-ice',
         'remote-audio-offer','remote-audio-answer','remote-audio-ice',
         'call-offer','call-answer','call-ice','call-reject','call-end','call-busy','call-audio-chunk','remote-audio-chunk','call-mute','call-mute-status','profile-update'

