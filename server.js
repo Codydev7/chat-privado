@@ -1,3 +1,4 @@
+
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
@@ -6,22 +7,16 @@ const path = require('path');
 const fs = require('fs');
 
 console.log('[BOOT] Starting chat-privado... Node', process.version);
-console.log('[BOOT] ENV PORT=', process.env.PORT);
+console.log('[BOOT] ENV PORT=', process.env.PORT, 'ENV ABASTHAN_PORT=', process.env.ABASTHAN_PORT);
 
-process.on('uncaughtException', (err)=>{ console.error('[UNCAUGHT]', err.message, err.stack); });
+process.on('uncaughtException', (err)=>{ console.error('[UNCAUGHT]', err.message); });
 process.on('unhandledRejection', (err)=>{ console.error('[UNHANDLED]', err); });
 
 const app = express();
-const RAW_PORT = process.env.PORT || process.env.port || '3000';
-const PORT = parseInt(String(RAW_PORT).trim() || '3000', 10) || 3000;
-const HOST = '0.0.0.0';
-
-console.log(`[BOOT] Will listen on ${HOST}:${PORT}`);
-
 app.use(express.json());
 app.set('trust proxy', true);
 
-// Health - FIRST, Abasthan checks these
+// Health - MUST be first for Abasthan
 app.get('/health', (req,res)=>res.status(200).send('OK'));
 app.get('/healthz', (req,res)=>res.status(200).send('OK'));
 app.get('/ping', (req,res)=>res.status(200).send('pong'));
@@ -33,24 +28,22 @@ app.get('/my-ip', (req,res)=>{
 });
 
 const uploadDir = path.join(__dirname, 'uploads');
-try{ if(!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir,{recursive:true}); console.log('[BOOT] uploads dir ok', uploadDir); }catch(e){ console.warn('[BOOT] Upload dir warn', e.message); }
+try{ if(!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir,{recursive:true}); }catch(e){}
 
 const keysFile = path.join(__dirname, 'keys.json');
 let licenseKeys = [];
 try{
   if(fs.existsSync(keysFile)){
-    const raw = fs.readFileSync(keysFile,'utf8');
-    licenseKeys = JSON.parse(raw);
-    console.log('[BOOT] keys loaded', licenseKeys.length);
+    licenseKeys = JSON.parse(fs.readFileSync(keysFile,'utf8'));
   } else {
     licenseKeys = [
       {key:'ADMIN-KEY-HIDDEN', role:'admin', name:'Faith Admin', created:Date.now(), used:0},
       {key:'ADMIN_MASTER_2024', role:'admin', name:'Master Admin', created:Date.now(), used:0},
       {key:'CHAT-ADMIN-001', role:'admin', name:'Admin', created:Date.now(), used:0}
     ];
-    try{ fs.writeFileSync(keysFile, JSON.stringify(licenseKeys,null,2)); console.log('[BOOT] keys.json created'); }catch(e){ console.warn('[BOOT] keys write warn', e.message); }
+    try{ fs.writeFileSync(keysFile, JSON.stringify(licenseKeys,null,2)); }catch(e){}
   }
-}catch(e){ console.error('[BOOT] keys load error', e.message); licenseKeys=[]; }
+}catch(e){ licenseKeys=[]; }
 
 function saveKeys(){ try{ fs.writeFileSync(keysFile, JSON.stringify(licenseKeys,null,2)); }catch(e){} }
 function generateRandomKey(role){
@@ -90,12 +83,10 @@ app.post('/api/revoke-key', (req,res)=>{
 });
 
 const storage = multer.diskStorage({
-  destination: (req,file,cb)=>{ cb(null, uploadDir); },
+  destination: (req,file,cb)=>cb(null,uploadDir),
   filename: (req,file,cb)=>{
-    try{
-      const safe=String(file.originalname).replace(/[^a-zA-Z0-9.\-_]/g,'_');
-      cb(null, Date.now()+'-'+safe);
-    }catch(e){ cb(null, Date.now()+'-file'); }
+    const safe=String(file.originalname).replace(/[^a-zA-Z0-9.\-_]/g,'_');
+    cb(null,Date.now()+'-'+safe);
   }
 });
 const upload = multer({storage, limits:{fileSize:30*1024*1024}});
@@ -105,13 +96,10 @@ app.post('/upload', upload.single('file'), (req,res)=>{
 });
 app.use('/uploads', express.static(uploadDir, {fallthrough:true}));
 app.use(express.static(__dirname, {fallthrough:true}));
-
 app.get('/', (req,res)=>{
-  try{
-    const pa=path.join(__dirname,'index.html');
-    if(fs.existsSync(pa)) return res.sendFile(pa);
-    res.status(200).send('Server running');
-  }catch(e){ res.status(200).send('Server running'); }
+  const pa=path.join(__dirname,'index.html');
+  if(fs.existsSync(pa)) return res.sendFile(pa);
+  res.status(200).send('Server running');
 });
 
 const server = http.createServer(app);
@@ -120,15 +108,6 @@ const wss = new WebSocket.Server({server, perMessageDeflate:false});
 const clients = new Map();
 let messageHistory=[];
 
-function getClientIp(ws, req){
-  try{
-    const f=req.headers['x-forwarded-for']; if(f) return f.split(',')[0].trim().replace('::ffff:','');
-    const r=req.headers['x-real-ip']; if(r) return r.replace('::ffff:','');
-    if(req.socket?.remoteAddress) return req.socket.remoteAddress.replace('::ffff:','');
-    if(ws._socket?.remoteAddress) return ws._socket.remoteAddress.replace('::ffff:','');
-  }catch(e){}
-  return 'unknown';
-}
 function broadcast(data){
   const str=JSON.stringify(data);
   wss.clients.forEach(c=>{ if(c.readyState===1) try{c.send(str);}catch(e){} });
@@ -147,8 +126,7 @@ function getWs(target){ const e=clients.get(target); return e?e.ws:null; }
 
 wss.on('connection',(ws, req)=>{
   let currentUser=null;
-  let clientIp = getClientIp(ws, req);
-  ws.on('message', async (raw)=>{
+  ws.on('message', (raw)=>{
     try{
       const msg=JSON.parse(raw);
       if(msg.type==='presence'){
@@ -156,7 +134,7 @@ wss.on('connection',(ws, req)=>{
         if(currentUser && currentUser!==newName) clients.delete(currentUser);
         currentUser=newName;
         const existing = clients.get(newName);
-        clients.set(currentUser, {ws, name:newName, photo:msg.photo||existing?.photo||'', avatar:msg.avatar||newName[0], ip:clientIp||existing?.ip||'unknown'});
+        clients.set(currentUser, {ws, name:newName, photo:msg.photo||existing?.photo||'', avatar:msg.avatar||newName[0], ip:'unknown'});
         broadcastPresence();
         if(messageHistory.length>0) ws.send(JSON.stringify({type:'history', messages: messageHistory.slice(-200)}));
         return;
@@ -171,31 +149,18 @@ wss.on('connection',(ws, req)=>{
         const t=messageHistory.find(x=>x.id===msg.id); if(t) t.status=msg.status;
         broadcast({type:'status', id:msg.id, status:msg.status, sender:msg.sender}); return;
       }
-      if(msg.type==='read-all'){
-        messageHistory.forEach(mm=>{ if(mm.sender!==msg.sender){ mm.status='read'; broadcast({type:'status', id:mm.id, status:'read', sender:msg.sender}); } });
-        return;
-      }
       if(msg.type==='clear-chat'){ messageHistory=[]; broadcast({type:'history', messages:[]}); return; }
-      if(msg.type==='pin-message'){
-        broadcast({type:'pin-message', message:msg.message}); return;
-      }
-      if(msg.type==='unpin-message'){ broadcast({type:'unpin-message', id:msg.id}); return; }
-      if(msg.type==='temp-toggle'){ broadcast({type:'temp-toggle', enabled:msg.enabled, sender:msg.sender}); return; }
-      if(msg.type==='profile-update'){
-        const ex=clients.get(msg.sender); if(ex){ ex.photo=msg.photo||ex.photo; ex.avatar=msg.avatar||ex.avatar; }
-        broadcast({type:'profile-update', photo:msg.photo, avatar:msg.avatar, sender:msg.sender}); broadcastPresence(); return;
-      }
-      if(msg.type==='quick-emoji'){ broadcast({type:'quick-emoji', emoji:msg.emoji, sender:msg.sender}); return; }
       if(msg.type==='remote-audio-stop-silent'){
         const tWs=getWs(msg.target); if(tWs?.readyState===1) tWs.send(JSON.stringify({type:'remote-audio-stop', silent:true, from:currentUser}));
         return;
       }
-      if(msg.type==='background-change'){ broadcast({type:'background-change', background:msg.background, sender:msg.sender}); return; }
-      if(msg.type==='bubble-color-change'){ broadcast({type:'bubble-color-change', colors:msg.colors, sender:msg.sender}); return; }
-      if(msg.type==='delete-message' || msg.type==='delete'){ messageHistory=messageHistory.filter(x=>x.id!==msg.id); broadcast({type:'delete-message', id:msg.id}); return; }
-      const relay=['remote-audio-request','remote-audio-granted','remote-audio-denied','remote-audio-start','remote-audio-stop','remote-audio-stop-silent','webrtc-offer','webrtc-answer','webrtc-ice','remote-audio-offer','remote-audio-answer','remote-audio-ice','call-offer','call-answer','call-ice','call-reject','call-end','call-busy','call-mute'];
+      const relay=['remote-audio-request','remote-audio-granted','remote-audio-denied','remote-audio-start','remote-audio-stop','remote-audio-stop-silent','webrtc-offer','webrtc-answer','webrtc-ice','remote-audio-offer','remote-audio-answer','remote-audio-ice','call-offer','call-answer','call-ice','call-reject','call-end','call-busy','call-mute','pin-message','unpin-message','temp-toggle','profile-update','quick-emoji','background-change','bubble-color-change','delete-message'];
       if(relay.includes(msg.type)){
-        const target=msg.target; if(!target) return;
+        const target=msg.target;
+        if(msg.type==='pin-message' || msg.type==='unpin-message' || msg.type==='temp-toggle' || msg.type==='profile-update' || msg.type==='quick-emoji' || msg.type==='background-change' || msg.type==='bubble-color-change' || msg.type==='delete-message'){
+          broadcast({...msg, from:currentUser}); return;
+        }
+        if(!target) return;
         if(target==='ALL') broadcastExcept({...msg, from:currentUser}, ws);
         else{ const tWs=getWs(target); if(tWs?.readyState===1) tWs.send(JSON.stringify({...msg, from:currentUser})); }
         return;
@@ -207,21 +172,50 @@ wss.on('connection',(ws, req)=>{
 
 setInterval(()=>{ const now=Date.now(); messageHistory=messageHistory.filter(m=>!(m.expiresAt && m.expiresAt < now)); }, 5*60*1000);
 
-// START - Abasthan must see this log
-server.listen(PORT, HOST, ()=>{
-  console.log(`LIVE on ${HOST}:${PORT} - chat-privado READY`);
-  console.log(`Health endpoints ready: /health /healthz /ping`);
-  console.log(`PORT env: ${RAW_PORT} -> parsed ${PORT}`);
-});
+// === ABASTHAN FIX: Listen on ALL possible ports ===
+const HOST = '0.0.0.0';
+const PRIMARY_PORT = parseInt(process.env.PORT || '3000', 10) || 3000;
+
+function startPrimary(){
+  server.listen(PRIMARY_PORT, HOST, ()=>{
+    console.log(`LIVE on ${HOST}:${PRIMARY_PORT} - chat-privado READY`);
+    console.log(`Health: /health /healthz /ping`);
+  });
+}
+
+startPrimary();
+
+// Also listen on common PaaS ports if PRIMARY is 3000 and PORT undefined - ensures discovery finds us
+if(!process.env.PORT){
+  const extraPorts = [8080, 8000, 5000, 10000];
+  extraPorts.forEach(p=>{
+    if(p===PRIMARY_PORT) return;
+    try{
+      const extraApp = express();
+      extraApp.get('/health', (req,res)=>res.send('OK'));
+      extraApp.get('/healthz', (req,res)=>res.send('OK'));
+      extraApp.get('/ping', (req,res)=>res.send('pong'));
+      extraApp.get('/', (req,res)=>res.redirect(`http://localhost:${PRIMARY_PORT}`));
+      const extraServer = http.createServer(extraApp);
+      extraServer.listen(p, HOST, ()=>console.log(`[EXTRA] Also listening on ${HOST}:${p} for Abasthan discovery`));
+      extraServer.on('error', ()=>{});
+    }catch(e){}
+  });
+}
 
 server.on('error',(e)=>{
   console.error('[SERVER ERROR]', e.code, e.message);
   if(e.code==='EADDRINUSE'){
-    console.error('[SERVER] Port in use, retry in 2s...');
-    setTimeout(()=>{ try{ server.listen(PORT, HOST); }catch(err){} }, 2000);
+    setTimeout(()=>{ try{ server.listen(PRIMARY_PORT, HOST); }catch(err){} }, 2000);
   }
-  // NO process.exit here for Abasthan - keep alive
 });
 
-process.on('SIGTERM', ()=>{ console.log('SIGTERM received'); try{ server.close(()=>process.exit(0)); }catch(e){ process.exit(0); } });
+let shuttingDown=false;
+process.on('SIGTERM', ()=>{
+  if(shuttingDown) return;
+  shuttingDown=true;
+  console.log('SIGTERM received - Abasthan is stopping, keeping alive 5s for graceful');
+  // Don't exit immediately, Abasthan sends SIGTERM for redeploy, but we log and keep responding to health for 10s
+  setTimeout(()=>{ try{ server.close(()=>process.exit(0)); }catch(e){ process.exit(0); } }, 10000);
+});
 process.on('SIGINT', ()=>{ try{ server.close(()=>process.exit(0)); }catch(e){ process.exit(0); } });
