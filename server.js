@@ -195,7 +195,7 @@ if(!process.env.PORT){
       extraApp.get('/health', (req,res)=>res.send('OK'));
       extraApp.get('/healthz', (req,res)=>res.send('OK'));
       extraApp.get('/ping', (req,res)=>res.send('pong'));
-      extraApp.get('/', (req,res)=>res.redirect(`http://localhost:${PRIMARY_PORT}`));
+      extraApp.get('/', (req,res)=>res.status(200).send('OK - use primary port'));
       const extraServer = http.createServer(extraApp);
       extraServer.listen(p, HOST, ()=>console.log(`[EXTRA] Also listening on ${HOST}:${p} for Abasthan discovery`));
       extraServer.on('error', ()=>{});
