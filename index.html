@@ -47,8 +47,7 @@ input:focus{outline:none;border-color:#ff0022;background:#131313;box-shadow:0 0 
 <p id="msg"></p>
 <div id="misKeys"></div>
 <p class="footer-note">Acceso restringido. Key inválida será rechazada. Cifrado de extremo a extremo.</p>
-<!-- Admin oculto: solo tú sabes que existe /admin - no visible para usuarios normales -->
-<div id="adminSecret" style="display:none"><a class="admin-link" href="/admin">🔑 Soy Admin</a></div>
+<div id="adminSecret" style="display:none"><a class="admin-link" id="adminLink" href="/admin">🔑 Soy Admin</a></div>
 <script>
 let clicks=0;
 document.querySelector(".logo").addEventListener("click", ()=>{
@@ -60,7 +59,7 @@ document.querySelector(".logo").addEventListener("click", ()=>{
       if(saved){ saved=saved.trim(); localStorage.setItem('admin_secret', saved); }
     }
     const div = document.getElementById("adminSecret");
-    const link = div.querySelector("a");
+    const link = document.getElementById("adminLink");
     if(saved){
       link.href = "/admin?admin_secret=" + encodeURIComponent(saved);
     }
@@ -89,7 +88,7 @@ async function entrar(){
     const keys = await res.json();
     
     if(keys.length===0){
-      document.getElementById('msg').innerHTML='No hay keys. Contacta al admin.';
+      document.getElementById('msg').innerHTML='No hay keys. <a href="/admin" style="color:#ff0022">Crea la primera en /admin</a>';
       return;
     }
     if(k==="ADMIN-INIT-2026"){

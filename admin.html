@@ -90,10 +90,9 @@ function withSecret(url){
 }
 if(!ADMIN_SECRET){
   document.addEventListener('DOMContentLoaded', ()=>{
-    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ff4444"><h1>🔒 Acceso Denegado</h1><p>Esta página está oculta. Necesitas el link secreto con ?admin_secret=</p><p style="color:#666;font-size:12px">Ejemplo: /admin?admin_secret=TU_CLAVE_SECRETA</p><p style="color:#444">Si eres el admin, revisa server.js ADMIN_SECRET</p></div>';
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ff4444"><h1>🔒 Acceso Denegado</h1><p>Esta página está oculta. Necesitas el link secreto con ?admin_secret=</p><p style="color:#666;font-size:12px">Ejemplo: /admin?admin_secret=TU_CLAVE_SECRETA</p></div>';
   });
 }
-
 const LS_MASTER_HASH = 'vault_master_hash';
 const LS_MASTER_KEY = 'vault_master_session';
 function hashMaster(pwd){ return CryptoJS.SHA256(pwd).toString(); }
