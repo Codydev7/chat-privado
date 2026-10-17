@@ -54,7 +54,17 @@ let clicks=0;
 document.querySelector(".logo").addEventListener("click", ()=>{
   clicks++;
   if(clicks>=5){
-    document.getElementById("adminSecret").style.display="block";
+    let saved = localStorage.getItem('admin_secret');
+    if(!saved){
+      saved = prompt("🔑 Pon tu ADMIN_SECRET (la que pusiste en Abasthan ENV):");
+      if(saved){ saved=saved.trim(); localStorage.setItem('admin_secret', saved); }
+    }
+    const div = document.getElementById("adminSecret");
+    const link = div.querySelector("a");
+    if(saved){
+      link.href = "/admin?admin_secret=" + encodeURIComponent(saved);
+    }
+    div.style.display="block";
     clicks=0;
   }
   setTimeout(()=>clicks=0,3000);
