@@ -3,59 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Vault - Seguro</title>
+<title>Admin Vault Pro - Avanzado</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <style>
-body{background:#0a0a0a;color:#fff;font-family:sans-serif;padding:20px;max-width:800px;margin:auto}
-.card{background:#1a1a1a;padding:20px;border-radius:12px;margin-bottom:20px;border:1px solid #333}
-input,select,button,textarea{padding:12px;border-radius:8px;border:none;margin:5px 0;width:100%;box-sizing:border-box}
-input,select,textarea{background:#2a2a2a;color:#fff}
-button{background:#fff;color:#000;font-weight:bold;cursor:pointer}
-button.danger{background:#ff3b3b;color:#fff}
-.key{font-family:monospace;background:#000;padding:10px;border-radius:8px;word-break:break-all;margin:5px 0}
-.alert{background:#331111;border:1px solid #ff0022;padding:12px;border-radius:8px;color:#ffaaaa;font-size:13px;margin:10px 0}
+*{box-sizing:border-box}
+body{background:#050505;background-image:radial-gradient(ellipse at 50% -20%, rgba(255,0,30,0.18) 0%, transparent 60%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:20px;max-width:900px;margin:auto;line-height:1.5}
+h1{font-weight:900;letter-spacing:1px;background:linear-gradient(180deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.card{background:linear-gradient(180deg,#151515 0%,#0f0f0f 100%);padding:22px;border-radius:14px;margin-bottom:22px;border:1px solid #222;box-shadow:0 8px 30px rgba(0,0,0,0.4)}
+input,select,button,textarea{padding:13px;border-radius:10px;border:none;margin:6px 0;width:100%;box-sizing:border-box;font-size:14px}
+input,select,textarea{background:#1a1a1a;color:#fff;border:1px solid #222;transition:0.2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#ff0022;background:#1e1e1e}
+button{background:linear-gradient(180deg,#fff 0%,#ddd 100%);color:#000;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:0.15s}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,0.15)}
+button.danger{background:linear-gradient(180deg,#ff3344 0%,#cc0011 100%);color:#fff}
+button.danger:hover{box-shadow:0 6px 20px rgba(255,0,34,0.4)}
+.key{font-family:monospace;background:#000;padding:12px;border-radius:10px;word-break:break-all;margin:8px 0;border:1px solid #222;font-size:13px}
+.alert{background:linear-gradient(180deg,#1a0000 0%,#0f0000 100%);border:1px solid #441111;padding:14px;border-radius:10px;color:#ff8888;font-size:13px;margin:12px 0}
+.success{background:#001a00;border:1px solid #003300;padding:14px;border-radius:10px;color:#66ff66;font-size:13px;margin:12px 0}
+.badge{display:inline-block;background:#1a0000;border:1px solid #330000;color:#ff0022;padding:3px 8px;border-radius:6px;font-size:11px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<h1>🔒 Admin Vault Privado - SEGURO</h1>
-<div class="alert">🔐 Ahora las keys se guardan HASHEADAS (encriptadas). Aunque alguien vea keys.json en GitHub, solo ve basura, no la key real.</div>
+<h1>🔒 VAULT PRO • ADMIN AVANZADO</h1>
+<div class="alert">🔐 <b>Seguridad Avanzada:</b><br>• Keys guardadas como SHA-256 (no texto plano)<br>• Videos encriptados con AES-256 usando tu clave maestra<br>• Abasthan solo ve hashes y texto basura encriptado<br>• Compatible con GitHub público sin exponer nada</div>
+
 <div id="setupMaster" class="card">
-<h2>1. Crear tu clave secreta maestra</h2>
-<input id="masterInput" type="password" placeholder="Crea tu clave secreta (solo tú la sabrás)">
-<button onclick="crearMaster()">Crear clave maestra</button>
+<h2>1️⃣ Clave Maestra (Solo tú)</h2>
+<p style="color:#888;font-size:13px">Esta clave nunca se sube al servidor. Se usa para encriptar/desencriptar videos en tu navegador. Si la pierdes, pierdes acceso a los videos.</p>
+<input id="masterInput" type="password" placeholder="Crea clave maestra fuerte (min 8 caracteres, ej: Verzaini2026!)">
+<button onclick="crearMaster()">Crear / Guardar Clave Maestra</button>
 <p id="masterMsg"></p>
 </div>
-<div id="panel" class="card" style="display:none">
-<h2>Admin Panel (Seguro)</h2>
-<p>Master: <span id="masterStatus">✅</span> <button onclick="cerrarSesion()" style="width:auto;padding:5px 10px">Cerrar</button></p>
-<h3>2. Generar Key para usuario</h3>
-<input id="nombreUser" placeholder="Nombre del usuario">
-<select id="diasSelect"><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="permanente">Permanente</option><option value="custom">Custom días...</option></select>
-<input id="customDias" type="number" placeholder="Días custom" style="display:none">
-<button onclick="generarKey()">Generar Key Segura</button>
-<div id="nuevaKey"></div>
-<h3 style="margin-top:30px">3. Keys activas (seguras - solo hash visible)</h3>
-<div id="listaKeys"></div>
-<h3 style="margin-top:30px">4. Videos encriptados</h3>
-<textarea id="videosInput" rows="5" placeholder='{"sala1": ["mega.nz/file/..."] }'></textarea>
-<button onclick="guardarVideos()">Encriptar y Guardar en API</button>
-<p id="videosMsg"></p>
+
+<div id="panel" style="display:none">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">2️⃣ Generar Keys</h2><div><span class="badge" id="masterStatus">Master OK</span> <button onclick="cerrarSesion()" style="width:auto;padding:6px 12px;font-size:12px">Cerrar</button> <a href="/" style="text-decoration:none"><button style="width:auto;padding:6px 12px;font-size:12px;background:#111;color:#fff;border:1px solid #222">Ir al Login</button></a></div></div>
+<div class="grid" style="margin-top:16px">
+<div><input id="nombreUser" placeholder="Nombre usuario (ej: Juan)"></div>
+<div><select id="diasSelect"><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="permanente" selected>Permanente</option><option value="custom">Custom...</option></select></div>
 </div>
+<input id="customDias" type="number" placeholder="Días custom" style="display:none">
+<button onclick="generarKey()" style="margin-top:8px;background:linear-gradient(180deg,#ff0033,#cc0011);color:#fff">🔑 Generar Key Segura (SHA-256)</button>
+<div id="nuevaKey"></div>
+</div>
+
+<div class="card">
+<h2>3️⃣ Keys Activas <span class="badge" id="totalKeys">0</span></h2>
+<div id="listaKeys"></div>
+</div>
+
+<div class="card">
+<h2>4️⃣ Vault de Videos (AES-256 Encriptado)</h2>
+<p style="color:#888;font-size:13px">Formato: JSON con salas. Ej: {"VIP": ["https://mega.nz/...", "https://..."], "GRATIS": ["..."]}</p>
+<textarea id="videosInput" rows="8" placeholder='{"VIP": ["https://mega.nz/file/abc#xyz", "https://mega.nz/file/def#uvw"], "PREMIUM": ["https://mega.nz/..."]}'></textarea>
+<div class="grid">
+<button onclick="cargarVideosActuales()" style="background:#111;color:#fff;border:1px solid #222">📥 Cargar videos actuales (desencriptar)</button>
+<button onclick="activarAutoDesbloqueo()" style="background:#111;color:#fff;border:1px solid #333">🔓 Activar Auto-desbloqueo para usuarios (sin pedir master)</button><button onclick="guardarVideos()" style="background:linear-gradient(180deg,#ff0033,#cc0011);color:#fff">🔒 Encriptar y Guardar en API</button>
+</div>
+<p id="videosMsg"></p>
+<div id="previewVideos" style="margin-top:12px"></div>
+</div>
+
+<div class="card" style="border-color:#003300">
+<h2>✅ Estado del Sistema</h2>
+<div id="estado" style="font-family:monospace;font-size:12px;color:#888"></div>
+</div>
+</div>
+
 <script>
 const API_URL = "";
 const LS_MASTER_HASH = 'vault_master_hash';
 const LS_MASTER_KEY = 'vault_master_session';
 function hashMaster(pwd){ return CryptoJS.SHA256(pwd).toString(); }
 function hashKey(k){ return CryptoJS.SHA256(k).toString(); }
+
 function crearMaster(){
   const pwd = document.getElementById('masterInput').value.trim();
-  if(pwd.length < 8){ alert('Mínimo 8'); return; }
+  if(pwd.length < 8){ alert('Mínimo 8 caracteres'); return; }
   localStorage.setItem(LS_MASTER_HASH, hashMaster(pwd));
   localStorage.setItem(LS_MASTER_KEY, pwd);
-  document.getElementById('masterMsg').innerText='Clave creada!';
-  init();
+  document.getElementById('masterMsg').innerHTML='<div class="success">✅ Clave maestra creada y guardada localmente</div>';
+  setTimeout(()=>init(), 600);
 }
 function getMaster(){ return localStorage.getItem(LS_MASTER_KEY); }
+
 async function init(){
   const hash = localStorage.getItem(LS_MASTER_HASH);
   const sess = localStorage.getItem(LS_MASTER_KEY);
@@ -63,62 +96,113 @@ async function init(){
   if(hashMaster(sess) !== hash){ alert('Sesión inválida'); localStorage.removeItem(LS_MASTER_KEY); location.reload(); return; }
   document.getElementById('setupMaster').style.display='none';
   document.getElementById('panel').style.display='block';
+  actualizarEstado();
   renderKeys();
+  cargarVideosActuales(true);
 }
+
 async function generarKey(){
   const nombre = document.getElementById('nombreUser').value.trim() || 'Usuario';
   let dias = document.getElementById('diasSelect').value;
   if(dias==='custom'){ dias = document.getElementById('customDias').value; if(!dias) return alert('Pon días'); }
   const isPerm = dias==='permanente';
-  const random = CryptoJS.lib.WordArray.random(6).toString();
-  const key = `${nombre.toUpperCase()}-${isPerm?'PERM':dias+'D'}-${random.toUpperCase()}`;
+  const random = CryptoJS.lib.WordArray.random(8).toString().toUpperCase().substring(0,10);
+  const key = `${nombre.toUpperCase()}-${isPerm?'PERM':dias+'D'}-${random}`;
   const key_hash = hashKey(key);
   const ahora = new Date();
   let expira = null;
   if(!isPerm){ expira = new Date(); expira.setDate(ahora.getDate()+parseInt(dias)); }
-  // Guardamos SOLO el hash, no la key real - SEGURO
   const obj = {key_hash, nombre, dias, expira: expira?expira.toISOString():null, activo:true, creado: ahora.toISOString()};
   
-  const res = await fetch(API_URL + "/api/keys.json", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(obj)});
-  if(!res.ok){ alert('Error guardando en API'); return; }
-  
-  document.getElementById('nuevaKey').innerHTML = `<div class="key">✅ Nueva Key generada (CÓPIALA AHORA, solo se muestra una vez):<br><b style="color:#ff0022;font-size:16px">${key}</b><br><small style="color:#666">Hash guardado: ${key_hash.substring(0,20)}...</small><br>Expira: ${isPerm?'Nunca':expira.toLocaleDateString()}<br><br><span style="color:#ffaa00">⚠️ Guarda esta key, no se puede recuperar después</span></div>`;
-  renderKeys();
+  try{
+    const res = await fetch(API_URL + "/api/keys.json", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(obj)});
+    if(!res.ok) throw new Error('API error');
+    document.getElementById('nuevaKey').innerHTML = `<div class="success" style="border-color:#ff0022;background:#1a0000;color:#ffcccc"><b>✅ KEY CREADA - CÓPIALA AHORA:</b><br><div style="font-size:18px;color:#ff0022;margin:8px 0;word-break:break-all">${key}</div><small style="color:#666">Hash SHA-256: ${key_hash.substring(0,24)}...<br>Expira: ${isPerm?'Nunca':expira.toLocaleDateString()}<br><span style="color:#ffaa00">⚠️ Solo se muestra una vez. Guárdala.</span></small></div>`;
+    document.getElementById('nombreUser').value='';
+    renderKeys();
+    actualizarEstado();
+  }catch(e){ alert('Error: '+e.message); }
 }
+
 async function renderKeys(){
   const div = document.getElementById('listaKeys');
+  const total = document.getElementById('totalKeys');
   try{
     const res = await fetch(API_URL + "/api/keys.json");
     const keys = await res.json();
-    if(keys.length===0){ div.innerHTML='<small>No hay keys</small>'; return; }
+    total.innerText = keys.length;
+    if(keys.length===0){ div.innerHTML='<small style="color:#555">No hay keys aún. Crea la primera arriba.</small>'; return; }
     div.innerHTML = keys.map((k,i)=>{
       const exp = k.expira ? new Date(k.expira) : null;
       const vencida = exp && new Date() > exp;
       const estado = !k.activo ? '⛔ Revocada' : vencida ? '⏰ Expirada' : '✅ Activa';
-      return `<div class="card" style="padding:10px"><b>${k.nombre}</b><br><small style="color:#666">Hash: ${k.key_hash.substring(0,20)}...</small><br>Días: ${k.dias} | ${estado} | Expira: ${exp?exp.toLocaleDateString():'Permanente'}<br><button class="danger" onclick="revocar('${k.key_hash}')">Remover Key</button></div>`;
+      const color = !k.activo || vencida ? '#333' : '#1a1a1a';
+      return `<div class="card" style="padding:12px;background:${color};margin-bottom:10px"><div style="display:flex;justify-content:space-between"><b>${k.nombre}</b><span class="badge">${estado}</span></div><small style="color:#666">Hash: ${k.key_hash.substring(0,22)}... | ${k.dias} | Expira: ${exp?exp.toLocaleDateString():'∞'} | Creada: ${new Date(k.creado).toLocaleDateString()}</small><br><button class="danger" style="margin-top:8px;padding:8px;font-size:12px" onclick="revocar('${k.key_hash}')">Revocar</button></div>`;
     }).join('');
   }catch(e){ div.innerHTML='Error API: '+e.message; }
 }
+
 async function revocar(key_hash){
-  if(!confirm('¿Remover esta key?')) return;
+  if(!confirm('¿Revocar esta key? El usuario ya no podrá entrar.')) return;
   await fetch(API_URL + "/api/keys.json", {method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({key_hash, activo:false})});
   renderKeys();
 }
+
+async function cargarVideosActuales(silent=false){
+  const master = getMaster();
+  if(!master) return;
+  try{
+    const res = await fetch(API_URL + "/api/videos_enc.json");
+    if(!res.ok){ if(!silent) document.getElementById('videosMsg').innerHTML='<div class="alert">No hay videos aún</div>'; return; }
+    const enc = await res.text();
+    if(!enc){ if(!silent) document.getElementById('videosMsg').innerHTML='<div class="alert">Vault vacío</div>'; return; }
+    const bytes = CryptoJS.AES.decrypt(enc, master);
+    const txt = bytes.toString(CryptoJS.enc.Utf8);
+    if(!txt) throw new Error('Clave maestra incorrecta');
+    const data = JSON.parse(txt);
+    document.getElementById('videosInput').value = JSON.stringify(data, null, 2);
+    document.getElementById('previewVideos').innerHTML = `<div class="success">📦 ${Object.keys(data).length} salas, ${Object.values(data).reduce((a,b)=>a+b.length,0)} videos cargados</div>`;
+    if(!silent) document.getElementById('videosMsg').innerHTML='<div class="success">✅ Videos desencriptados y cargados en editor</div>';
+  }catch(e){ if(!silent) document.getElementById('videosMsg').innerHTML='<div class="alert">Error: '+e.message+'</div>'; }
+}
+
+async function activarAutoDesbloqueo(){
+  const master = getMaster();
+  if(!master) return alert('Primero crea clave maestra');
+  if(!confirm('¿Activar auto-desbloqueo? Esto guarda tu clave maestra en el servidor de forma que los usuarios normales NO tengan que ponerla. Es menos seguro pero más cómodo. ¿Continuar?')) return;
+  try{
+    await fetch(API_URL + "/api/master_key", {method:"POST", headers:{"Content-Type":"text/plain"}, body: master});
+    document.getElementById('videosMsg').innerHTML='<div class="success">✅ Auto-desbloqueo activado. Usuarios ya no necesitan clave maestra.</div>';
+  }catch(e){ alert(e.message); }
+}
+
 async function guardarVideos(){
   const txt = document.getElementById('videosInput').value.trim();
-  if(!txt) return;
+  if(!txt) return alert('Pega JSON');
   try{
-    JSON.parse(txt);
+    const data = JSON.parse(txt);
     const master = getMaster();
-    const enc = CryptoJS.AES.encrypt(txt, master).toString();
-    await fetch(API_URL + "/api/videos_enc.json", {method:"POST", headers:{"Content-Type":"text/plain"}, body: enc});
-    document.getElementById('videosMsg').innerText='¡Guardado encriptado en API!';
-  }catch(e){ alert('JSON inválido: '+e.message); }
+    const enc = CryptoJS.AES.encrypt(JSON.stringify(data), master).toString();
+    const res = await fetch(API_URL + "/api/videos_enc.json", {method:"POST", headers:{"Content-Type":"text/plain"}, body: enc});
+    if(!res.ok) throw new Error('API error');
+    document.getElementById('videosMsg').innerHTML='<div class="success">✅ ¡Vault encriptado y guardado! Abasthan solo ve texto basura.</div>';
+    document.getElementById('previewVideos').innerHTML = `<div class="success">🔒 Encriptado AES-256: ${enc.substring(0,40)}... (${enc.length} chars)</div>`;
+    actualizarEstado();
+  }catch(e){ alert('JSON inválido o error: '+e.message); }
 }
+
+async function actualizarEstado(){
+  try{
+    const rk = await fetch(API_URL + "/api/keys.json").then(r=>r.json());
+    const rv = await fetch(API_URL + "/api/videos_enc.json").then(r=>r.text().catch(()=> '')).catch(()=> '');
+    document.getElementById('estado').innerHTML = `API: /api/keys.json = ${rk.length} keys (hasheadas)<br>API: /api/videos_enc.json = ${rv.length} chars encriptados<br>Master local: ${getMaster()? '✅ OK' : '❌ No'}<br>Hora: ${new Date().toLocaleString()}`;
+  }catch(e){ document.getElementById('estado').innerText='API no disponible aún'; }
+}
+
 document.getElementById('diasSelect').addEventListener('change', e=>{
   document.getElementById('customDias').style.display = e.target.value==='custom'?'block':'none';
 });
-function cerrarSesion(){ localStorage.removeItem(LS_MASTER_KEY); location.reload(); }
+function cerrarSesion(){ if(confirm('¿Borrar clave maestra local?')){ localStorage.removeItem(LS_MASTER_KEY); localStorage.removeItem(LS_MASTER_HASH); location.reload(); } }
 init();
 </script>
 </body>

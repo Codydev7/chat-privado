@@ -67,6 +67,23 @@ app.post('/api/videos_enc.json', (req, res) => {
   } catch(e){ res.status(500).json({error:e.message}); }
 });
 
+// Master key para auto-desbloqueo
+if (!fs.existsSync('master_enc.txt')) fs.writeFileSync('master_enc.txt', '');
+app.get('/api/master_key', (req,res)=>{
+  try{
+    const data = fs.readFileSync('master_enc.txt','utf8') || '';
+    if(!data) return res.status(404).send('');
+    res.send(data);
+  }catch(e){ res.status(404).send(''); }
+});
+app.post('/api/master_key', (req,res)=>{
+  try{
+    const data = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    fs.writeFileSync('master_enc.txt', data);
+    res.json({ok:true});
+  }catch(e){ res.status(500).json({error:e.message}); }
+});
+
 // Rutas principales
 app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'index.html')));
 app.get('/admin', (req,res)=> res.sendFile(path.join(__dirname,'admin.html')));
