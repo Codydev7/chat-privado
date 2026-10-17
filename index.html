@@ -47,7 +47,19 @@ input:focus{outline:none;border-color:#ff0022;background:#131313;box-shadow:0 0 
 <p id="msg"></p>
 <div id="misKeys"></div>
 <p class="footer-note">Acceso restringido. Key inválida será rechazada. Cifrado de extremo a extremo.</p>
-<a class="admin-link" href="/admin">🔑 Soy Admin - Crear primera key</a>
+<!-- Admin oculto: solo tú sabes que existe /admin - no visible para usuarios normales -->
+<div id="adminSecret" style="display:none"><a class="admin-link" href="/admin">🔑 Soy Admin</a></div>
+<script>
+let clicks=0;
+document.querySelector(".logo").addEventListener("click", ()=>{
+  clicks++;
+  if(clicks>=5){
+    document.getElementById("adminSecret").style.display="block";
+    clicks=0;
+  }
+  setTimeout(()=>clicks=0,3000);
+});
+</script>
 </div>
 <div id="contenido">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="margin:0">🎬 Vault Pro</h2><div><span id="userBadge" class="badge"></span><button class="btn-primary" onclick="salir()" style="width:auto;padding:10px 18px;font-size:12px;margin-left:12px">Salir</button></div></div>
@@ -67,7 +79,7 @@ async function entrar(){
     const keys = await res.json();
     
     if(keys.length===0){
-      document.getElementById('msg').innerHTML='No hay keys. <a href="/admin" style="color:#ff0022">Crea la primera en /admin</a>';
+      document.getElementById('msg').innerHTML='No hay keys. Contacta al admin.';
       return;
     }
     if(k==="ADMIN-INIT-2026"){

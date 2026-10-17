@@ -74,6 +74,26 @@ button.danger:hover{box-shadow:0 6px 20px rgba(255,0,34,0.4)}
 
 <script>
 const API_URL = "";
+// 🔐 Obtener admin_secret de URL ?admin_secret=XXX
+const urlParams = new URLSearchParams(window.location.search);
+let ADMIN_SECRET = urlParams.get('admin_secret') || localStorage.getItem('admin_secret') || "";
+if(urlParams.get('admin_secret')){
+  localStorage.setItem('admin_secret', urlParams.get('admin_secret'));
+  ADMIN_SECRET = urlParams.get('admin_secret');
+}
+function getAdminHeaders(){
+  return {"Content-Type":"application/json","x-admin-secret": ADMIN_SECRET};
+}
+function withSecret(url){
+  const sep = url.includes('?') ? '&' : '?';
+  return url + sep + 'admin_secret=' + encodeURIComponent(ADMIN_SECRET);
+}
+if(!ADMIN_SECRET){
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ff4444"><h1>🔒 Acceso Denegado</h1><p>Esta página está oculta. Necesitas el link secreto con ?admin_secret=</p><p style="color:#666;font-size:12px">Ejemplo: /admin?admin_secret=TU_CLAVE_SECRETA</p><p style="color:#444">Si eres el admin, revisa server.js ADMIN_SECRET</p></div>';
+  });
+}
+
 const LS_MASTER_HASH = 'vault_master_hash';
 const LS_MASTER_KEY = 'vault_master_session';
 function hashMaster(pwd){ return CryptoJS.SHA256(pwd).toString(); }
@@ -115,7 +135,7 @@ async function generarKey(){
   const obj = {key_hash, nombre, dias, expira: expira?expira.toISOString():null, activo:true, creado: ahora.toISOString()};
   
   try{
-    const res = await fetch(API_URL + "/api/keys.json", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(obj)});
+    const res = await fetch(withSecret(API_URL + "/api/keys.json"), {method:"POST", headers:getAdminHeaders(), body: JSON.stringify({...obj, admin_secret: ADMIN_SECRET})});
     if(!res.ok) throw new Error('API error');
     document.getElementById('nuevaKey').innerHTML = `<div class="success" style="border-color:#ff0022;background:#1a0000;color:#ffcccc"><b>✅ KEY CREADA - CÓPIALA AHORA:</b><br><div style="font-size:18px;color:#ff0022;margin:8px 0;word-break:break-all">${key}</div><small style="color:#666">Hash SHA-256: ${key_hash.substring(0,24)}...<br>Expira: ${isPerm?'Nunca':expira.toLocaleDateString()}<br><span style="color:#ffaa00">⚠️ Solo se muestra una vez. Guárdala.</span></small></div>`;
     document.getElementById('nombreUser').value='';
@@ -128,7 +148,7 @@ async function renderKeys(){
   const div = document.getElementById('listaKeys');
   const total = document.getElementById('totalKeys');
   try{
-    const res = await fetch(API_URL + "/api/keys.json");
+    const res = await fetch(withSecret(API_URL + "/api/keys.json"));
     const keys = await res.json();
     total.innerText = keys.length;
     if(keys.length===0){ div.innerHTML='<small style="color:#555">No hay keys aún. Crea la primera arriba.</small>'; return; }
@@ -144,7 +164,7 @@ async function renderKeys(){
 
 async function revocar(key_hash){
   if(!confirm('¿Revocar esta key? El usuario ya no podrá entrar.')) return;
-  await fetch(API_URL + "/api/keys.json", {method:"PATCH", headers:{"Content-Type":"application/json"}, body: JSON.stringify({key_hash, activo:false})});
+  await fetch(withSecret(API_URL + "/api/keys.json"), {method:"PATCH", headers:getAdminHeaders(), body: JSON.stringify({key_hash, activo:false, admin_secret: ADMIN_SECRET})});
   renderKeys();
 }
 
@@ -171,7 +191,7 @@ async function activarAutoDesbloqueo(){
   if(!master) return alert('Primero crea clave maestra');
   if(!confirm('¿Activar auto-desbloqueo? Esto guarda tu clave maestra en el servidor de forma que los usuarios normales NO tengan que ponerla. Es menos seguro pero más cómodo. ¿Continuar?')) return;
   try{
-    await fetch(API_URL + "/api/master_key", {method:"POST", headers:{"Content-Type":"text/plain"}, body: master});
+    await fetch(withSecret(API_URL + "/api/master_key"), {method:"POST", headers:{"Content-Type":"text/plain","x-admin-secret": ADMIN_SECRET}, body: master});
     document.getElementById('videosMsg').innerHTML='<div class="success">✅ Auto-desbloqueo activado. Usuarios ya no necesitan clave maestra.</div>';
   }catch(e){ alert(e.message); }
 }
@@ -183,7 +203,7 @@ async function guardarVideos(){
     const data = JSON.parse(txt);
     const master = getMaster();
     const enc = CryptoJS.AES.encrypt(JSON.stringify(data), master).toString();
-    const res = await fetch(API_URL + "/api/videos_enc.json", {method:"POST", headers:{"Content-Type":"text/plain"}, body: enc});
+    const res = await fetch(withSecret(API_URL + "/api/videos_enc.json"), {method:"POST", headers:{"Content-Type":"text/plain","x-admin-secret": ADMIN_SECRET}, body: enc});
     if(!res.ok) throw new Error('API error');
     document.getElementById('videosMsg').innerHTML='<div class="success">✅ ¡Vault encriptado y guardado! Abasthan solo ve texto basura.</div>';
     document.getElementById('previewVideos').innerHTML = `<div class="success">🔒 Encriptado AES-256: ${enc.substring(0,40)}... (${enc.length} chars)</div>`;
@@ -193,7 +213,7 @@ async function guardarVideos(){
 
 async function actualizarEstado(){
   try{
-    const rk = await fetch(API_URL + "/api/keys.json").then(r=>r.json());
+    const rk = await fetch(withSecret(API_URL + "/api/keys.json")).then(r=>r.json());
     const rv = await fetch(API_URL + "/api/videos_enc.json").then(r=>r.text().catch(()=> '')).catch(()=> '');
     document.getElementById('estado').innerHTML = `API: /api/keys.json = ${rk.length} keys (hasheadas)<br>API: /api/videos_enc.json = ${rv.length} chars encriptados<br>Master local: ${getMaster()? '✅ OK' : '❌ No'}<br>Hora: ${new Date().toLocaleString()}`;
   }catch(e){ document.getElementById('estado').innerText='API no disponible aún'; }
