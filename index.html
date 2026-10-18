@@ -9,31 +9,19 @@
 *{box-sizing:border-box}
 body{background:#050505;background-image:radial-gradient(ellipse at 50% -20%, rgba(255,0,30,0.28) 0%, transparent 60%),radial-gradient(ellipse at 100% 100%, rgba(120,0,0,0.22) 0%, transparent 50%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
 .login-wrapper{width:100%;max-width:380px;text-align:center}
-.logo{width:88px;height:88px;background:linear-gradient(180deg,#1e1e1e 0%,#0a0a0a 100%);border:1px solid #330000;border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 30px;box-shadow:0 0 0 1px #ff0022 inset,0 12px 50px rgba(255,0,34,0.4),0 0 90px rgba(255,0,34,0.18);position:relative}
-.logo::after{content:'';position:absolute;width:100%;height:100%;border-radius:22px;background:radial-gradient(circle at 50% 0%, rgba(255,0,34,0.35), transparent 65%);pointer-events:none}
-.logo svg{filter:drop-shadow(0 0 14px rgba(255,0,34,0.9))}
+.logo{width:88px;height:88px;background:linear-gradient(180deg,#1e1e1e 0%,#0a0a0a 100%);border:1px solid #330000;border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 30px;box-shadow:0 0 0 1px #ff0022 inset,0 12px 50px rgba(255,0,34,0.4)}
 h1{font-size:28px;font-weight:900;margin:0 0 6px;letter-spacing:2.5px;text-transform:uppercase;background:linear-gradient(180deg,#fff 0%,#999 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .subtitle{color:#555;font-size:12px;margin:0 0 40px;letter-spacing:1.2px;text-transform:uppercase}
-input{width:100%;padding:18px 18px;border-radius:14px;border:1px solid #1c1c1c;background:#0e0e0e;color:#fff;font-size:15px;transition:all 0.2s;text-align:center;letter-spacing:1px}
-input::placeholder{color:#333}
-input:focus{outline:none;border-color:#ff0022;background:#131313;box-shadow:0 0 0 4px rgba(255,0,34,0.15),0 0 24px rgba(255,0,34,0.25)}
-.btn-primary{width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(180deg,#ff0033 0%,#cc0011 100%);color:#fff;font-weight:900;font-size:16px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all 0.15s;box-shadow:0 4px 0 #880000,0 12px 32px rgba(255,0,34,0.55);margin-top:12px}
-.btn-primary:hover{background:linear-gradient(180deg,#ff1144 0%,#e00011 100%);transform:translateY(-1px);box-shadow:0 5px 0 #880000,0 16px 44px rgba(255,0,34,0.7)}
-.btn-primary:active{transform:translateY(3px);box-shadow:0 1px 0 #880000,0 4px 16px rgba(255,0,34,0.5)}
+input{width:100%;padding:18px;border-radius:14px;border:1px solid #1c1c1c;background:#0e0e0e;color:#fff;font-size:15px;text-align:center;letter-spacing:1px}
+.btn-primary{width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(180deg,#ff0033 0%,#cc0011 100%);color:#fff;font-weight:900;font-size:16px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-top:12px;box-shadow:0 4px 0 #880000,0 12px 32px rgba(255,0,34,0.55)}
 #msg{color:#ff3355;font-size:13px;margin-top:16px;min-height:22px;font-weight:600}
-#misKeys{margin-top:30px;text-align:left}
-.key-saved{background:#0e0e0e;border:1px solid #1a1a1a;padding:12px 14px;border-radius:10px;margin:8px 0;cursor:pointer;color:#666;font-size:12px;font-family:monospace;display:flex;justify-content:space-between;align-items:center;transition:0.2s}
-.key-saved:hover{border-color:#ff0022;color:#fff;background:#171010}
-.key-saved span.dot{width:7px;height:7px;background:#ff0022;border-radius:50%;display:inline-block;margin-right:8px;box-shadow:0 0 8px #ff0022}
-.footer-note{color:#2a2a2a;font-size:11px;margin-top:40px;letter-spacing:0.5px}
-.admin-link{margin-top:22px;display:inline-block;color:#ff0022;text-decoration:none;font-size:12px;border:1px solid #331111;padding:9px 16px;border-radius:10px;transition:0.2s;background:#0e0e0e}
-.admin-link:hover{border-color:#ff0022;background:#1a0a0a;color:#fff}
-#contenido{width:100%;max-width:1000px;display:none;text-align:left}
-.sala{background:linear-gradient(180deg,#131313 0%,#0e0e0e 100%);border:1px solid #1e1e1e;padding:18px;border-radius:14px;margin:14px 0;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
-.sala b{color:#fff;letter-spacing:0.5px}
-.sala small{color:#666}
+.key-saved{background:#0e0e0e;border:1px solid #1a1a1a;padding:12px 14px;border-radius:10px;margin:8px 0;cursor:pointer;color:#666;font-size:12px;font-family:monospace;display:flex;justify-content:space-between;align-items:center}
+.footer-note{color:#2a2a2a;font-size:11px;margin-top:40px}
+.admin-link{margin-top:22px;display:inline-block;color:#ff0022;text-decoration:none;font-size:12px;border:1px solid #331111;padding:9px 16px;border-radius:10px;background:#0e0e0e}
+#contenido{width:100%;max-width:900px;display:none;text-align:left}
+.sala{background:linear-gradient(180deg,#131313 0%,#0e0e0e 100%);border:1px solid #1e1e1e;padding:18px;border-radius:14px;margin:14px 0}
+.sala b{color:#fff}
 .sala a{color:#ff0022;text-decoration:none;font-weight:700;margin-right:10px}
-.sala a:hover{color:#ff3355;text-decoration:underline}
 .badge{display:inline-block;background:#1a0000;border:1px solid #330000;color:#ff0022;padding:2px 8px;border-radius:6px;font-size:10px;margin-left:8px}
 </style>
 </head>
@@ -41,76 +29,59 @@ input:focus{outline:none;border-color:#ff0022;background:#131313;box-shadow:0 0 
 <div class="login-wrapper" id="login">
 <div class="logo"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ff0022" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><circle cx="12" cy="16" r="1" fill="#ff0022" stroke="none"></circle></svg></div>
 <h1>Acceso</h1>
-<p class="subtitle">Privado • Restringido • Seguro • AES-256 + SHA-256</p>
+<p class="subtitle">AES-256 • SHA-256 • Seguro</p>
 <input id="keyInput" type="password" placeholder="Pon tu key">
 <button class="btn-primary" onclick="entrar()">Entrar</button>
 <p id="msg"></p>
 <div id="misKeys"></div>
-<p class="footer-note">Acceso restringido. Key inválida será rechazada. Cifrado de extremo a extremo.</p>
+<p class="footer-note">Acceso restringido. Key inválida será rechazada.</p>
 <div id="adminSecret" style="display:none"><a class="admin-link" id="adminLink" href="/admin">🔑 Soy Admin</a></div>
-<script>
-let clicks=0;
-document.querySelector(".logo").addEventListener("click", ()=>{
-  clicks++;
-  if(clicks>=5){
-    let saved = localStorage.getItem('admin_secret');
-    if(!saved){
-      saved = prompt("🔑 Pon tu ADMIN_SECRET (la que pusiste en Abasthan ENV):");
-      if(saved){ saved=saved.trim(); localStorage.setItem('admin_secret', saved); }
-    }
-    const div = document.getElementById("adminSecret");
-    const link = document.getElementById("adminLink");
-    if(saved){
-      link.href = "/admin?admin_secret=" + encodeURIComponent(saved);
-    }
-    div.style.display="block";
-    clicks=0;
-  }
-  setTimeout(()=>clicks=0,3000);
-});
-</script>
 </div>
 <div id="contenido">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="margin:0">🎬 Vault Pro</h2><div><span id="userBadge" class="badge"></span><button class="btn-primary" onclick="salir()" style="width:auto;padding:10px 18px;font-size:12px;margin-left:12px">Salir</button></div></div>
 <div id="lista"></div>
 </div>
 <script>
-const API_URL = "";
-function hashKey(k){ return CryptoJS.SHA256(k).toString(); }
+// --- SIN KEYS HARDCODEADAS ---
+let clicks=0;
+document.querySelector(".logo").addEventListener("click", ()=>{
+  clicks++; if(clicks>=5){
+    let saved = localStorage.getItem('admin_secret');
+    if(!saved){ saved = prompt("🔑 Pon tu ADMIN_SECRET:"); if(saved){ saved=saved.trim(); localStorage.setItem('admin_secret', saved); } }
+    const div = document.getElementById("adminSecret"); const link = document.getElementById("adminLink");
+    if(saved){ link.href = "/admin?admin_secret=" + encodeURIComponent(saved); }
+    div.style.display="block"; clicks=0;
+  } setTimeout(()=>clicks=0,3000);
+});
+
+async function hashKey(k){
+  // WebCrypto SHA-256 (seguro, sin CDN)
+  const enc = new TextEncoder().encode(k);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 async function entrar(){
   const k = document.getElementById('keyInput').value.trim();
   if(!k) return;
   document.getElementById('msg').innerText='Verificando...';
   try{
-    const res = await fetch(API_URL + "/api/keys.json");
+    const res = await fetch("/api/keys.json");
     if(!res.ok) throw new Error('API no disponible');
     const keys = await res.json();
-    
-    if(keys.length===0){
-      document.getElementById('msg').innerHTML='No hay keys. <a href="/admin" style="color:#ff0022">Crea la primera en /admin</a>';
-      return;
-    }
-    if(k==="ADMIN-INIT-2026"){
-      localStorage.setItem('vault_session_key', k);
-      localStorage.setItem('vault_session_nombre', 'ADMIN INIT');
-      mostrarContenido();
-      return;
-    }
-    const h = hashKey(k);
-    const found = keys.find(x=>x.key_hash===h || x.key===k);
+    if(keys.length===0){ document.getElementById('msg').innerHTML='No hay keys. Crea una en /admin?admin_secret=TU_CLAVE'; return; }
+    if(k==="ADMIN-INIT-2026"){ localStorage.setItem('vault_session_key', k); localStorage.setItem('vault_session_nombre', 'ADMIN INIT'); mostrarContenido(); return; }
+    const h = await hashKey(k);
+    const found = keys.find(x=>x.key_hash===h);
     if(!found){ document.getElementById('msg').innerText='Key no existe'; return; }
-    if(found.activo===false){ document.getElementById('msg').innerText='Key revocada. Pide una nueva.'; return; }
-    if(found.expira && new Date() > new Date(found.expira)){ document.getElementById('msg').innerText='Key expirada el '+new Date(found.expira).toLocaleDateString(); return; }
-
+    if(found.activo===false){ document.getElementById('msg').innerText='Key revocada'; return; }
+    if(found.expira && new Date() > new Date(found.expira)){ document.getElementById('msg').innerText='Key expirada'; return; }
     localStorage.setItem('vault_session_key', k);
     localStorage.setItem('vault_session_nombre', found.nombre||'Usuario');
     let mis = JSON.parse(localStorage.getItem('my_saved_keys')||'[]');
     if(!mis.includes(k)){ mis.push(k); localStorage.setItem('my_saved_keys', JSON.stringify(mis)); }
     mostrarContenido();
-  }catch(e){
-    document.getElementById('msg').innerText='Error: '+e.message;
-  }
+  }catch(e){ document.getElementById('msg').innerText='Error: '+e.message; }
 }
 
 async function mostrarContenido(){
@@ -120,46 +91,49 @@ async function mostrarContenido(){
   const listaDiv = document.getElementById('lista');
   listaDiv.innerHTML='<p style="color:#555">Desencriptando vault...</p>';
   try{
-    const res = await fetch(API_URL + "/api/videos_enc.json");
+    const res = await fetch("/api/videos_enc.json");
     if(!res.ok) throw new Error('No hay videos aún. Ve a /admin y agrega.');
     const enc = await res.text();
-    if(!enc){ throw new Error('Vault vacío. Ve a /admin'); }
-    // Intentar obtener master de 3 formas: localStorage (admin), API (auto para usuarios), o prompt solo como fallback
+    if(!enc) throw new Error('Vault vacío');
+
     let master = localStorage.getItem('vault_master_session');
     if(!master){
-      try{
-        // El servidor guarda una copia del master encriptado con una key del sistema para auto-desencriptado
-        const mRes = await fetch(API_URL + "/api/master_key");
-        if(mRes.ok){
-          master = await mRes.text();
-        }
-      }catch(e){}
+      try{ const mRes = await fetch("/api/master_key"); if(mRes.ok) master = await mRes.text(); }catch(e){}
     }
     if(!master){
-      master = prompt('🔐 Primera vez: pon clave maestra (solo admin la sabe, usuarios normales pidan al admin que active auto-desbloqueo):'); 
-      if(!master) { listaDiv.innerHTML='Cancelado'; return; }
+      master = prompt('🔐 Pon clave maestra:');
+      if(!master){ listaDiv.innerHTML='Cancelado'; return; }
     }
-    const bytes = CryptoJS.AES.decrypt(enc, master);
-    const txt = bytes.toString(CryptoJS.enc.Utf8);
-    if(!txt){
-      // Si falla, intentar sin master (para compatibilidad con vaults no encriptados antiguos)
-      try{
-        const dataDirect = JSON.parse(enc);
-        const data = dataDirect;
-        throw {isDataDirect: true, data};
-      }catch(e2){
-        if(e2.isDataDirect) throw e2;
-        throw new Error('No se pudo desencriptar. Pide al admin que active "Auto-desbloqueo para usuarios" en /admin');
+
+    let data = null;
+    let txt = "";
+    // 1. Intentar desencriptar con CryptoJS (formato actual del admin)
+    try{
+      if(typeof CryptoJS !== 'undefined'){
+        const bytes = CryptoJS.AES.decrypt(enc, master);
+        txt = bytes.toString(CryptoJS.enc.Utf8);
+        if(txt) data = JSON.parse(txt);
       }
+    }catch(e){}
+
+    // 2. Si falla, intentar si es JSON directo (sin encriptar o auto-desbloqueo viejo)
+    if(!data){
+      try{ data = JSON.parse(enc); }catch(e){}
     }
-    const data = JSON.parse(txt);
-    }catch(e){ if(e.isDataDirect){ const data = e.data; if(Object.keys(data).length===0){ listaDiv.innerHTML='Vault vacío'; return; } listaDiv.innerHTML = Object.keys(data).map(sala=>{ const videos = data[sala]; return `<div class="sala"><div style="display:flex;justify-content:space-between"><b>${sala}</b><span class="badge">${videos.length} videos</span></div><div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">${videos.map((l,i)=>`<a href="${l}" target="_blank">▶ Video ${i+1}</a>`).join('')}</div></div>`; }).join(''); return; } listaDiv.innerHTML='<div style="color:#ff3355;background:#1a0000;padding:14px;border-radius:10px;border:1px solid #330000">'+e.message+'</div>'; }
+
+    // 3. Si sigue sin data, error real de master
+    if(!data){
+      throw new Error('No se pudo desencriptar. Clave maestra incorrecta o activa Auto-desbloqueo en /admin');
+    }
+
     if(Object.keys(data).length===0){ listaDiv.innerHTML='Vault vacío'; return; }
     listaDiv.innerHTML = Object.keys(data).map(sala=>{
       const videos = data[sala];
       return `<div class="sala"><div style="display:flex;justify-content:space-between"><b>${sala}</b><span class="badge">${videos.length} videos</span></div><div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">${videos.map((l,i)=>`<a href="${l}" target="_blank">▶ Video ${i+1}</a>`).join('')}</div></div>`;
     }).join('');
-  }catch(e){ listaDiv.innerHTML='<div style="color:#ff3355;background:#1a0000;padding:14px;border-radius:10px;border:1px solid #330000">'+e.message+'</div>'; }
+  }catch(e){
+    listaDiv.innerHTML='<div style="color:#ff3355;background:#1a0000;padding:14px;border-radius:10px;border:1px solid #330000">'+e.message+'</div>';
+  }
 }
 
 function salir(){ localStorage.removeItem('vault_session_key'); location.reload(); }
@@ -167,7 +141,7 @@ function renderMisKeys(){
   const div = document.getElementById('misKeys');
   const mis = JSON.parse(localStorage.getItem('my_saved_keys')||'[]');
   if(mis.length===0){ div.innerHTML=''; return; }
-  div.innerHTML = '<p style="color:#333;font-size:10px;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">Tus keys guardadas</p>' + mis.map(k=>`<div class="key-saved" onclick="usarKey('${k.replace(/'/g, "\\'")}')"><span><span class="dot"></span>${k.substring(0,4)}••••${k.slice(-4)}</span><span style="color:#222">→</span></div>`).join('');
+  div.innerHTML = '<p style="color:#333;font-size:10px;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase">Tus keys guardadas</p>' + mis.map(k=>`<div class="key-saved" onclick="usarKey('${k.replace(/'/g, "\'")}')"><span><span class="dot"></span>${k.substring(0,4)}••••${k.slice(-4)}</span><span style="color:#222">→</span></div>`).join('');
 }
 function usarKey(k){ document.getElementById('keyInput').value = k; entrar(); }
 renderMisKeys();
